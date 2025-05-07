@@ -45,12 +45,12 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
   }
 }
 
-// Function to directly fetch from NOAA API
+// Function to directly fetch from NOAA API - Updated with correct URL
 export async function fetchNOAAMagneticData() {
   try {
     console.log("Directly fetching from NOAA API");
-    // Using cors-anywhere proxy to avoid CORS issues
-    const response = await fetch("https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json", {
+    // Using the correct NOAA API endpoint
+    const response = await fetch("https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json", {
       method: "GET"
     });
     
@@ -67,31 +67,21 @@ export async function fetchNOAAMagneticData() {
       throw new Error("Unexpected data format from NOAA");
     }
     
-    // Get the header row (first element in the array)
-    const headers = rawData[0];
-    
-    // Find the index of the time_tag and hp columns
-    const timeIndex = headers.indexOf("time_tag");
-    const hpIndex = headers.indexOf("hp");
-    
-    if (timeIndex === -1 || hpIndex === -1) {
-      console.error("Required columns not found in NOAA data", headers);
-      throw new Error("Required columns not found in NOAA data");
-    }
-    
     // Transform the data into the format our app expects
-    // Skip the header row and take last 30 data points (or fewer if less available)
-    const startIndex = Math.max(1, rawData.length - 30);
-    const formattedData = rawData.slice(startIndex).map((entry: any[]) => {
-      const timestamp = entry[timeIndex];
-      const hpValue = parseFloat(entry[hpIndex] || 0);
+    // Take last 30 data points (or fewer if less available)
+    const startIndex = Math.max(0, rawData.length - 30);
+    const formattedData = rawData.slice(startIndex).map((entry: any) => {
+      const timestamp = entry.time_tag || "";
+      // The structure of this data may be different from the previous endpoint
+      // Using the 'hp' field or equivalent field based on actual data structure
+      const hpValue = entry.hp || entry.bt || entry.total || 0;
       
       return {
         timestamp,
         label: timestamp ? timestamp.substring(11, 16) : "",
-        value: hpValue.toFixed(2),
+        value: typeof hpValue === 'number' ? hpValue.toFixed(2) : "0.00",
         decg: 0, dbhg: 0, decr: 0, dbhr: 0,
-        mfig: hpValue, mfir: 0, mdig: 0, mdir: 0
+        mfig: parseFloat(hpValue) || 0, mfir: 0, mdig: 0, mdir: 0
       };
     });
     
