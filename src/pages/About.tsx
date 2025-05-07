@@ -89,6 +89,7 @@ const About = () => {
                 <li>Expansion of historical data analysis</li>
                 <li>Collaboration with seismologists and geophysicists worldwide</li>
                 <li>Development of real-time monitoring systems</li>
+                <li>Continuous automated practice predictions every 3 hours and weekly retraining to improve model performance even during periods of low seismic activity</li>
               </ul>
             </div>
           </div>
