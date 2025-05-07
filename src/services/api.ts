@@ -1,80 +1,85 @@
+import { toast } from "sonner";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://preview--quake-watch-magnetic-eye.lovable.app/api';
 
-/**
- * Fetches magnetic field data from the API
- * @returns Promise with magnetic field readings
- */
 export async function getDashboardSummary() {
-  const res = await fetch('${API_BASE_URL}/dashboard-summary');
-  if (!res.ok) throw new Error("Failed to fetch dashboard summary");
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE_URL}/dashboard-summary`);
+    if (!res.ok) {
+      const error = new Error(res.status === 404 ? "Dashboard summary endpoint not found" : "Failed to fetch dashboard summary");
+      toast.error(error.message);
+      throw error;
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching dashboard summary:", error);
+    toast.error(error.message);
+    throw error;
+  }
 }
 
 export async function getMagneticData() {
   try {
     const response = await fetch(`${API_BASE_URL}/magnetic-data`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch magnetic data: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "NOAA API not found, serving cached data or empty" : `Failed to fetch magnetic data: ${response.statusText}`);
+      toast.error(error.message);
+      throw error;
     }
     return await response.json();
   } catch (error) {
     console.error("Error fetching magnetic data:", error);
-    throw error; // Re-throw the error so it can be handled elsewhere
+    toast.error(error.message);
+    throw error;
   }
 }
 
-/**
- * Fetches current earthquake predictions
- * @returns Promise with prediction data
- */
 export async function getPredictions() {
   try {
     const response = await fetch(`${API_BASE_URL}/predictions`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch predictions: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "Predictions endpoint not found" : `Failed to fetch predictions: ${response.statusText}`);
+      toast.error(error.message);
+      throw error;
     }
     const data = await response.json();
-
-    // Filter out predictions with a magnitude below 6.0
     const filteredPredictions = data.predictions.filter((prediction) => prediction.magnitude >= 6.0);
-
     return { predictions: filteredPredictions };
   } catch (error) {
     console.error("Error fetching predictions:", error);
-    throw error; // Re-throw the error so it can be handled elsewhere
+    toast.error(error.message);
+    throw error;
   }
 }
 
-/**
- * Fetches model status information
- * @returns Promise with model status data
- */
 export async function getModelStatus() {
   try {
     const response = await fetch(`${API_BASE_URL}/model-status`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch model status: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "Model status endpoint not found" : `Failed to fetch model status: ${response.statusText}`);
+      toast.error(error.message);
+      throw error;
     }
     return await response.json();
   } catch (error) {
     console.error("Error fetching model status:", error);
-    throw error; // Re-throw the error so it can be handled elsewhere
+    toast.error(error.message);
+    throw error;
   }
 }
 
-/**
- * Fetches risk assessment data
- * @returns Promise with risk assessment information
- */
 export async function getRiskAssessment() {
   try {
     const response = await fetch(`${API_BASE_URL}/risk-assessment`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch risk assessment: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "Risk assessment endpoint not found" : `Failed to fetch risk assessment: ${response.statusText}`);
+      toast.error(error.message);
+      throw error;
     }
     return await response.json();
   } catch (error) {
     console.error("Error fetching risk assessment:", error);
-    throw error; // Re-throw the error so it can be handled elsewhere
+    toast.error(error.message);
+    throw error;
   }
 }
