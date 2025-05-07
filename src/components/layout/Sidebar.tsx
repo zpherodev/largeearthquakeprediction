@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Compass, Radar, Earth, Monitor, ArrowDown } from "lucide-react";
+import { Compass, Radar, Earth, Monitor, ArrowDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type NavItem = {
@@ -31,6 +31,11 @@ const navItems: NavItem[] = [
     title: "Map View",
     icon: <Earth className="w-5 h-5" />,
     path: "/map"
+  },
+  {
+    title: "About",
+    icon: <Info className="w-5 h-5" />,
+    path: "/about"
   }
 ];
 

@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import MagneticData from "./pages/MagneticData";
 import Predictions from "./pages/Predictions";
 import Map from "./pages/Map";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,11 @@ const App = () => (
           <Route path="/map" element={
             <Layout>
               <Map />
+            </Layout>
+          } />
+          <Route path="/about" element={
+            <Layout>
+              <About />
             </Layout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
