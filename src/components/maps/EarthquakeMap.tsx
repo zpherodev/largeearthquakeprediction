@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,16 +12,37 @@ export function EarthquakeMap() {
 
   const regions = [
     { 
-      name: "San Andreas Fault", 
+      name: "San Andreas Fault - Northern Section", 
       risk: "high", 
-      coordinates: "34.0522° N, 118.2437° W",
+      coordinates: "37.7749° N, 122.4194° W",
+      anomalyLevel: 72,
+      lastActivity: "2 days ago"
+    },
+    { 
+      name: "San Andreas Fault - Central Section", 
+      risk: "high", 
+      coordinates: "35.3733° N, 120.4522° W",
       anomalyLevel: 68,
       lastActivity: "3 days ago"
     },
     { 
-      name: "Cascadia Subduction Zone", 
+      name: "San Andreas Fault - Southern Section", 
       risk: "moderate", 
-      coordinates: "45.5051° N, 122.6750° W",
+      coordinates: "33.9416° N, 116.8111° W",
+      anomalyLevel: 58,
+      lastActivity: "5 days ago"
+    },
+    { 
+      name: "Cascadia Subduction Zone - North", 
+      risk: "moderate", 
+      coordinates: "48.3895° N, 124.6351° W",
+      anomalyLevel: 48,
+      lastActivity: "1 week ago"
+    },
+    { 
+      name: "Cascadia Subduction Zone - South", 
+      risk: "moderate", 
+      coordinates: "42.8865° N, 124.5641° W",
       anomalyLevel: 42,
       lastActivity: "2 weeks ago"
     },
@@ -34,18 +54,46 @@ export function EarthquakeMap() {
       lastActivity: "8 months ago"
     },
     { 
-      name: "Aleutian Islands", 
+      name: "Aleutian Islands - Western", 
       risk: "low", 
-      coordinates: "58.3019° N, 174.3942° W",
+      coordinates: "52.8222° N, 173.1686° W",
+      anomalyLevel: 32,
+      lastActivity: "3 weeks ago"
+    },
+    { 
+      name: "Aleutian Islands - Eastern", 
+      risk: "low", 
+      coordinates: "56.8083° N, 157.3960° W",
       anomalyLevel: 28,
       lastActivity: "1 month ago"
     },
     { 
-      name: "Ring of Fire - Japan", 
-      risk: "moderate", 
-      coordinates: "36.2048° N, 138.2529° E",
-      anomalyLevel: 45,
+      name: "Ring of Fire - Japan (Kanto)", 
+      risk: "high", 
+      coordinates: "35.6762° N, 139.6503° E",
+      anomalyLevel: 64,
       lastActivity: "2 days ago"
+    },
+    { 
+      name: "Ring of Fire - Japan (Tohoku)", 
+      risk: "moderate", 
+      coordinates: "38.2682° N, 140.8694° E",
+      anomalyLevel: 45,
+      lastActivity: "6 days ago"
+    },
+    { 
+      name: "Ring of Fire - Japan (Kyushu)", 
+      risk: "moderate", 
+      coordinates: "33.5904° N, 130.4017° E",
+      anomalyLevel: 40,
+      lastActivity: "1 week ago"
+    },
+    { 
+      name: "Denali Fault System", 
+      risk: "low", 
+      coordinates: "63.1148° N, 151.1926° W",
+      anomalyLevel: 22,
+      lastActivity: "2 months ago"
     },
   ];
 
@@ -93,15 +141,46 @@ export function EarthquakeMap() {
   const renderMapMarkers = () => {
     return regions.map((region, index) => {
       const isActive = index === activeRegion;
-      // Calculate position (this is simplified - in a real app you'd convert lat/long to pixels)
-      const left = 20 + (index * 18) + '%';
-      const top = 30 + (Math.sin(index * 1.5) * 30) + '%';
+      
+      // Calculate position based on coordinates
+      // Converting coordinates to relative positions (simplified for visualization)
+      const coordinates = region.coordinates.split(", ");
+      const latStr = coordinates[0];
+      const lngStr = coordinates[1];
+      
+      // Extract numeric values and direction (N/S/E/W)
+      const latVal = parseFloat(latStr.substring(0, latStr.length - 3));
+      const latDir = latStr.slice(-1);
+      const lngVal = parseFloat(lngStr.substring(0, lngStr.length - 3));
+      const lngDir = lngStr.slice(-1);
+      
+      // Normalize to 0-100 range (simplified mapping)
+      // North is up, East is right
+      let left, top;
+      
+      // Northern hemisphere (N) is top half, Southern (S) is bottom half
+      if (latDir === 'N') {
+        top = 50 - (latVal / 90 * 50); // 0 at equator, lower values as we go north
+      } else {
+        top = 50 + (latVal / 90 * 50); // 0 at equator, higher values as we go south
+      }
+      
+      // Western hemisphere (W) is left half, Eastern (E) is right half
+      if (lngDir === 'W') {
+        left = 50 - (lngVal / 180 * 50); // 0 at prime meridian, lower values as we go west
+      } else {
+        left = 50 + (lngVal / 180 * 50); // 0 at prime meridian, higher values as we go east
+      }
+      
+      // Apply some offset for better visual distribution
+      left = Math.max(5, Math.min(95, left));
+      top = Math.max(5, Math.min(95, top));
       
       return (
         <div 
           key={index}
           className={`absolute transition-all duration-300 ${isActive ? 'z-10' : 'z-0'}`} 
-          style={{ left, top }}
+          style={{ left: `${left}%`, top: `${top}%` }}
         >
           <div 
             className={`
@@ -196,6 +275,10 @@ export function EarthquakeMap() {
                     strokeDasharray="5,5"
                     strokeWidth="2"
                   />
+                  
+                  {/* Grid lines */}
+                  <line x1="0" y1="250" x2="1000" y2="250" className="text-slate-300 dark:text-slate-700" strokeDasharray="5,5" strokeWidth="0.5" />
+                  <line x1="500" y1="0" x2="500" y2="500" className="text-slate-300 dark:text-slate-700" strokeDasharray="5,5" strokeWidth="0.5" />
                 </svg>
               </div>
               
