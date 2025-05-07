@@ -1,11 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://preview--quake-watch-magnetic-eye.lovable.app/api';
 
 /**
  * Fetches magnetic field data from the API
  * @returns Promise with magnetic field readings
  */
 export async function getDashboardSummary() {
-  const res = await fetch("http://localhost:5000/api/dashboard-summary");
+  const res = await fetch('${API_BASE_URL}/api/dashboard-summary');
   if (!res.ok) throw new Error("Failed to fetch dashboard summary");
   return res.json();
 }
