@@ -52,7 +52,7 @@ export function Sidebar() {
       <div className="p-4 flex items-center justify-between">
         <div className={cn("flex items-center", collapsed ? "hidden" : "")}>
           <Earth className="h-6 w-6 text-sidebar-primary mr-2" />
-          <h1 className="text-sidebar-foreground font-bold text-lg">QuakeWatch</h1>
+          <h1 className="text-sidebar-foreground font-bold text-lg">LEPM</h1>
         </div>
         <Button 
           variant="ghost" 
