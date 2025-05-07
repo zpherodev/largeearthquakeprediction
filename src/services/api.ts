@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Update to point to the actual backend server
@@ -185,4 +184,74 @@ export async function triggerPrediction() {
     console.error("Error triggering prediction:", error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
+}
+
+// New function to fetch historical earthquake data from GitHub
+export async function fetchHistoricalData() {
+  try {
+    console.log("Fetching historical earthquake data");
+    const response = await fetch("https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/main/combined_earthquake_m6_and_above_full_data.csv");
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch historical data: ${response.status}`);
+    }
+    
+    const csvText = await response.text();
+    const rows = csvText.split('\n');
+    const headers = rows[0].split(',');
+    
+    // Parse CSV into array of objects
+    const data = rows.slice(1).filter(row => row.trim() !== '').map((row, index) => {
+      const values = parseCSVRow(row);
+      if (values.length !== headers.length) {
+        console.warn(`Row ${index + 2} has ${values.length} values, expected ${headers.length}`);
+        return null;
+      }
+      
+      const item: Record<string, any> = {};
+      headers.forEach((header, i) => {
+        // Convert numeric values
+        if (['latitude', 'longitude', 'depth', 'mag'].includes(header)) {
+          item[header] = parseFloat(values[i]);
+        } else {
+          item[header] = values[i];
+        }
+      });
+      
+      // Add an id for React keys
+      item.id = `eq-${index}`;
+      return item;
+    }).filter(item => item !== null);
+    
+    console.log(`Parsed ${data.length} historical earthquake records`);
+    return data;
+  } catch (error) {
+    console.error("Error fetching historical data:", error);
+    toast.error(`Failed to load historical data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw error;
+  }
+}
+
+// Helper function to properly parse CSV rows (handles quoted values with commas)
+function parseCSVRow(row: string): string[] {
+  const result = [];
+  let insideQuotes = false;
+  let currentValue = '';
+  
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === ',' && !insideQuotes) {
+      result.push(currentValue);
+      currentValue = '';
+    } else {
+      currentValue += char;
+    }
+  }
+  
+  // Add the last value
+  result.push(currentValue);
+  return result;
 }

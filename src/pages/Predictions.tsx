@@ -1,10 +1,11 @@
 import { PredictionTable } from "@/components/predictions/PredictionTable";
+import { HistoricalDataTable } from "@/components/predictions/HistoricalDataTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { getPredictions, triggerPrediction, getModelStatus } from "@/services/api";
+import { getPredictions, triggerPrediction, getModelStatus, fetchHistoricalData } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Info, BarChart, ArrowUpDown, LineChart, FileBarChart, Activity } from "lucide-react";
+import { RefreshCw, Info, BarChart, ArrowUpDown, LineChart, FileBarChart, Activity, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,6 +26,19 @@ const Predictions = () => {
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 30000,
+  });
+
+  // Fetch historical earthquake data
+  const { 
+    data: historicalData, 
+    isLoading: isHistoricalLoading, 
+    error: historicalError 
+  } = useQuery({
+    queryKey: ["historicalData"],
+    queryFn: fetchHistoricalData,
+    // Don't refetch this data automatically - it's static
+    staleTime: Infinity,
+    cacheTime: Infinity,
   });
 
   const handleRefresh = async () => {
@@ -99,6 +113,10 @@ const Predictions = () => {
           <TabsList>
             <TabsTrigger value="active">Active Predictions</TabsTrigger>
             <TabsTrigger value="archived">Archived</TabsTrigger>
+            <TabsTrigger value="historical">
+              <Database className="h-4 w-4 mr-1" />
+              Training Data
+            </TabsTrigger>
             <TabsTrigger value="verification">Verification</TabsTrigger>
             <TabsTrigger value="metrics">Model Performance</TabsTrigger>
           </TabsList>
@@ -213,6 +231,14 @@ const Predictions = () => {
                 </Alert>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="historical" className="mt-4">
+            <HistoricalDataTable 
+              data={historicalData || []} 
+              isLoading={isHistoricalLoading} 
+              error={historicalError as Error | null}
+            />
           </TabsContent>
 
           <TabsContent value="verification" className="mt-4">
