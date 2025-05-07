@@ -63,7 +63,7 @@ export function StatusCard({
              "text-gray-500 bg-gray-50 dark:bg-gray-800/30";
     }
     
-    // For risk factors, up is bad (higher risk)
+    // For risk factors, up is bad (higher risk) when dealing with magnitudes >= 6.0
     return trend === "up" ? "text-red-500 bg-red-50 dark:bg-red-950/30" :
            trend === "down" ? "text-green-500 bg-green-50 dark:bg-green-950/30" :
            "text-gray-500 bg-gray-50 dark:bg-gray-800/30";
@@ -72,9 +72,15 @@ export function StatusCard({
   // Determine value style based on content
   const getValueStyle = () => {
     if (typeof value === 'string') {
-      if (value.includes("High") || value.includes("Active")) return "text-red-500";
+      if (value.includes("High") || value.includes("Active") || 
+          (title.toLowerCase().includes("magnitude") && parseFloat(value.toString()) >= 6.0)) {
+        return "text-red-500";
+      }
       if (value.includes("Moderate")) return "text-amber-500";
       if (value.includes("Low") || value.includes("Normal")) return "text-green-500";
+    } else if (typeof value === 'number' && title.toLowerCase().includes("magnitude")) {
+      if (value >= 6.0) return "text-red-500";
+      if (value >= 5.0) return "text-amber-500";
     }
     return "";
   };
@@ -90,6 +96,11 @@ export function StatusCard({
       if (percent >= 80) return "bg-green-500";
       if (percent >= 60) return "bg-amber-500";
       return "bg-red-500";
+    } else if (title.toLowerCase().includes("magnitude")) {
+      // For earthquake magnitude (assuming maxValue is 10)
+      if ((progressValue / maxValue) * 10 >= 6.0) return "bg-red-500";
+      if ((progressValue / maxValue) * 10 >= 5.0) return "bg-amber-500";
+      return "bg-green-500";
     } else {
       // For risk metrics, lower is better
       if (percent <= 30) return "bg-green-500";
