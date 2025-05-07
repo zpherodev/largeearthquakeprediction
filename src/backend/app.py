@@ -50,10 +50,20 @@ risk_assessment = {
     }
 }
 
+import requests
+
 def load_model():
-    """Load the trained Random Forest model"""
+    """Load the trained Random Forest model from local file or GitHub"""
     global model
     try:
+        if not os.path.exists(MODEL_PATH):
+            logger.info("Model not found locally. Downloading from GitHub...")
+            url = "https://github.com/crknftart/Large-Earthquake-Prediction-Model/raw/main/earthquake_prediction_model.pkl"
+            response = requests.get(url)
+            with open(MODEL_PATH, 'wb') as f:
+                f.write(response.content)
+            logger.info("Model downloaded and saved.")
+
         with open(MODEL_PATH, 'rb') as file:
             model = pickle.load(file)
         logger.info(f"Model loaded successfully from {MODEL_PATH}")
@@ -61,6 +71,7 @@ def load_model():
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         return False
+
 
 def fetch_emag_data():
     """Fetch magnetic field data from EMAG2 dataset or similar source"""
