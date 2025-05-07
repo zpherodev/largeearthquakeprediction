@@ -45,39 +45,62 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
   }
 }
 
-// Fallback function to directly fetch from NOAA when the backend fails
+// Function to directly fetch from NOAA API
 export async function fetchNOAAMagneticData() {
   try {
-    console.log("Attempting direct fetch from NOAA API");
-    const response = await fetch("https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json");
+    console.log("Directly fetching from NOAA API");
+    // Using cors-anywhere proxy to avoid CORS issues
+    const response = await fetch("https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json", {
+      method: "GET"
+    });
     
     if (!response.ok) {
       throw new Error(`NOAA API Error: ${response.status}`);
     }
     
+    // Parse the JSON data
     const rawData = await response.json();
+    console.log("NOAA Raw Data:", rawData);
+    
     if (!Array.isArray(rawData)) {
+      console.error("Unexpected data format from NOAA:", rawData);
       throw new Error("Unexpected data format from NOAA");
     }
     
+    // Get the header row (first element in the array)
+    const headers = rawData[0];
+    
+    // Find the index of the time_tag and hp columns
+    const timeIndex = headers.indexOf("time_tag");
+    const hpIndex = headers.indexOf("hp");
+    
+    if (timeIndex === -1 || hpIndex === -1) {
+      console.error("Required columns not found in NOAA data", headers);
+      throw new Error("Required columns not found in NOAA data");
+    }
+    
     // Transform the data into the format our app expects
-    const formattedData = rawData.slice(-30).map(entry => {
-      const timestamp = entry.time_tag;
-      const value = parseFloat(entry.hp || 0).toFixed(2);
+    // Skip the header row and take last 30 data points (or fewer if less available)
+    const startIndex = Math.max(1, rawData.length - 30);
+    const formattedData = rawData.slice(startIndex).map((entry: any[]) => {
+      const timestamp = entry[timeIndex];
+      const hpValue = parseFloat(entry[hpIndex] || 0);
       
       return {
         timestamp,
         label: timestamp ? timestamp.substring(11, 16) : "",
-        value,
+        value: hpValue.toFixed(2),
         decg: 0, dbhg: 0, decr: 0, dbhr: 0,
-        mfig: parseFloat(value), mfir: 0, mdig: 0, mdir: 0
+        mfig: hpValue, mfir: 0, mdig: 0, mdir: 0
       };
     });
     
+    console.log("Formatted NOAA Data:", formattedData);
     return { data: formattedData };
   } catch (error) {
     console.error("Direct NOAA fetch error:", error);
     toast.error(`Failed to fetch magnetic data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Return empty data array to prevent UI errors
     return { data: [] };
   }
 }
@@ -88,18 +111,18 @@ export async function getDashboardSummary() {
 
 export async function getMagneticData() {
   try {
-    const data = await fetchWithErrorHandling('/magnetic-data');
-    // Ensure we have the right structure even if the API response format changes
-    if (!data.data || data.data.length === 0) {
-      console.log("No data from backend API, attempting direct NOAA fetch");
-      return fetchNOAAMagneticData();
-    }
-    return data.data ? { data: data.data } : { data: [] };
+    // Try direct NOAA API first for reliable data
+    console.log("Trying direct NOAA fetch first for reliability");
+    return await fetchNOAAMagneticData();
   } catch (error) {
-    console.error("Error in getMagneticData:", error);
-    console.log("Backend API error, attempting direct NOAA fetch");
-    // Fallback to direct NOAA API
-    return fetchNOAAMagneticData();
+    console.error("NOAA API fetch failed, falling back to backend:", error);
+    try {
+      const data = await fetchWithErrorHandling('/magnetic-data');
+      return data.data ? { data: data.data } : { data: [] };
+    } catch (backendError) {
+      console.error("Backend API error:", backendError);
+      return { data: [] };
+    }
   }
 }
 

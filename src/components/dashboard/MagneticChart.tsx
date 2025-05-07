@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { getMagneticData } from "@/services/api";
@@ -23,7 +23,9 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
   const { data: magneticData, isLoading, error, refetch } = useQuery({
     queryKey: ['magneticData'],
     queryFn: getMagneticData,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds
+    retry: 3,
+    staleTime: 30000,
   });
 
   const handleRefresh = async () => {
@@ -77,8 +79,12 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] flex items-center justify-center flex-col gap-4">
             <div className="text-red-500">Error loading magnetic data</div>
+            <Button onClick={handleRefresh} variant="default">
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -142,7 +148,7 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
-                domain={[50, 150]} 
+                domain={['auto', 'auto']} 
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={value => `${value}nT`}
