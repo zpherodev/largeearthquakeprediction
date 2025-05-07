@@ -1,14 +1,62 @@
-// Update this page (the content is just a fallback if you fail to update the page)
 
-const Index = () => {
+import { Compass, Radar, Earth, TrendingDown } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { StatusCard } from "@/components/dashboard/StatusCard";
+import { MagneticChart } from "@/components/dashboard/MagneticChart";
+import { RiskAssessment } from "@/components/dashboard/RiskAssessment";
+import { EarthquakeMap } from "@/components/maps/EarthquakeMap";
+import { ModelStatus } from "@/components/models/ModelStatus";
+
+const Dashboard = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="flex flex-col gap-4 p-4 lg:p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatusCard 
+          title="Current EMAG Reading" 
+          value="102.5 nT" 
+          description="Normal range (90-110 nT)"
+          icon={<Compass />}
+          trend="stable"
+        />
+        <StatusCard 
+          title="Signal Intensity" 
+          value="Medium" 
+          description="↑ 7% from baseline"
+          icon={<Radar />}
+          trend="up"
+        />
+        <StatusCard 
+          title="Anomaly Detection" 
+          value="Active" 
+          description="Monitoring 7 regions"
+          icon={<Earth />}
+          trend="stable" 
+        />
+        <StatusCard 
+          title="Prediction Confidence" 
+          value="76%" 
+          description="Based on current data"
+          icon={<TrendingDown />}
+          trend="down" 
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+        <div className="lg:col-span-2">
+          <MagneticChart 
+            title="Magnetic Field Readings" 
+            description="Live EMAG data updates every 30 seconds" 
+          />
+        </div>
+        <RiskAssessment />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+        <EarthquakeMap />
+        <ModelStatus />
       </div>
     </div>
   );
 };
 
-export default Index;
+export default Dashboard;
