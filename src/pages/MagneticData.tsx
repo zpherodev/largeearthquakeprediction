@@ -1,3 +1,4 @@
+
 import { RiskAssessment } from "@/components/dashboard/RiskAssessment";
 import { MagneticChart } from "@/components/dashboard/MagneticChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -226,6 +227,44 @@ const MagneticData = () => {
                       <li><span className="font-semibold">True Positives (47)</span>: Correctly predicted earthquake events.</li>
                       <li><span className="font-semibold">True Negatives (46)</span>: Correctly predicted non-earthquake events (control data).</li>
                       <li><span className="font-semibold">False Positives (0)</span> and <span className="font-semibold">False Negatives (0)</span>: No incorrect predictions were made.</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Control Sample Design</h4>
+                    <p className="text-gray-600 dark:text-gray-300 mb-3">
+                      In our mock tests, control samples (datasets without earthquakes) were carefully designed to simulate "normal" data where no seismic events occur:
+                    </p>
+                    
+                    <h5 className="font-semibold mt-3 mb-2">Dataset B (No Anomalies)</h5>
+                    <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300">
+                      <li><span className="font-semibold">Description</span>: This dataset represents a scenario with no significant magnetic anomalies that could be associated with earthquake precursors.</li>
+                      <li><span className="font-semibold">Data Characteristics</span>:
+                        <ul className="list-circle pl-6 mt-1">
+                          <li>Magnetic Field Data: Values for magnetic field components (decg, dbhg) are generated as normal distributions centered around zero with low variance (0.1 standard deviation).</li>
+                          <li>Earthquake Labels: All labels are set to 0 (no earthquake), representing a scenario where the model should not detect any earthquake signals.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                    
+                    <h5 className="font-semibold mt-3 mb-2">Dataset C (Random Noise)</h5>
+                    <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300">
+                      <li><span className="font-semibold">Description</span>: This dataset represents random, noisy data where magnetic field measurements fluctuate randomly, simulating environmental noise or unrelated magnetic field variations.</li>
+                      <li><span className="font-semibold">Data Characteristics</span>:
+                        <ul className="list-circle pl-6 mt-1">
+                          <li>Magnetic Field Data: Values are generated as normal distributions with a mean of 0 and higher variance (1 standard deviation), simulating random noise with no patterns.</li>
+                          <li>Earthquake Labels: All labels are set to 0 (no earthquake), indicating no seismic events should be predicted based on random noise.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Purpose of Control Samples</h4>
+                    <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300">
+                      <li><span className="font-semibold">Avoid Overfitting</span>: Ensure the model does not overfit to noise or normal variations in magnetic field data, which could lead to false positives.</li>
+                      <li><span className="font-semibold">Validate Specificity</span>: Test the model's specificity, meaning its ability to correctly identify non-earthquake events as such, which is crucial for practical applications.</li>
+                      <li><span className="font-semibold">Improve Generalization</span>: By testing on these control samples, we evaluate the model's generalization capability to avoid predicting earthquakes where there are no meaningful patterns.</li>
                     </ul>
                   </div>
                   
