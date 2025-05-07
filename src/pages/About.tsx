@@ -1,4 +1,3 @@
-
 import { Info } from "lucide-react";
 
 const About = () => {
@@ -11,9 +10,9 @@ const About = () => {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
         <h2 className="text-2xl font-semibold mb-4">Large Earthquake Prediction Model</h2>
-        <div className="credits">Magnetic Field Landslide and Earthquake Correlation Research By C.R. Kunferman</div><br>
-        <div className="credits">Model Research and Development By C.R. Kunferman assisted by OpenAI</div><br>
-        <div className="credits">Model Implementation full stack development by loveable.dev prompted and guided by C.R. Kunferman</div>
+        <div className="credits mb-1">Magnetic Field Landslide and Earthquake Correlation Research By C.R. Kunferman</div>
+        <div className="credits mb-1">Model Research and Development By C.R. Kunferman assisted by OpenAI</div>
+        <div className="credits mb-4">Model Implementation, full stack development by loveable.dev prompted and guided by C.R. Kunferman</div>
         
         <div className="space-y-6">
           <div>
