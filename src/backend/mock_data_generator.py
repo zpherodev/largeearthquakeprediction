@@ -90,10 +90,10 @@ def save_model(model, filename='earthquake_prediction_model.pkl'):
 
 if __name__ == "__main__":
     # Generate mock training data
-    data = generate_mock_training_data(n_samples=2000)
+    # data = generate_mock_training_data(n_samples=2000)
     
     # Train a model on the mock data
-    model = train_mock_model(data)
+    # model = train_mock_model(data)
     
     # Save the model
-    save_model(model)
+    # save_model(model)
