@@ -97,3 +97,18 @@ if __name__ == "__main__":
     
     # Save the model
     # save_model(model)
+app.get('/api/dashboard-summary', (req, res) => {
+  const magnetic = generateMagneticData();
+  const modelStatus = generateModelStatus();
+  const risk = generateRiskAssessment();
+  const predictions = generatePredictions();
+
+  const latestMag = magnetic.data[magnetic.data.length - 1];
+
+  res.json({
+    currentReading: latestMag,
+    modelStatus,
+    riskAssessment: risk,
+    predictions,
+  });
+});
