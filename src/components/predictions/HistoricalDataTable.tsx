@@ -66,9 +66,9 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
   const handleDownload = () => {
     // Create CSV content with enhanced data
     const csvContent = "data:text/csv;charset=utf-8," + 
-      "time,latitude,longitude,depth,mag,place,magneticAnomaly,resonancePattern,decg,dbhg,decr,dbhr,mdig,mdir\n" + 
+      "time,latitude,longitude,mag,place,magneticAnomaly,resonancePattern,decg,dbhg,decr,dbhr,mdig,mdir\n" + 
       data.map(item => {
-        return `"${item.time || ""}",${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${item.mag || 0},"${item.place || ""}",${item.magneticAnomaly || 0},${item.resonancePattern || 0},${item.decg || 0},${item.dbhg || 0},${item.decr || 0},${item.dbhr || 0},${item.mdig || 0},${item.mdir || 0}`;
+        return `"${item.time || ""}",${item.latitude || 0},${item.longitude || 0},${item.mag || 0},"${item.place || ""}",${item.magneticAnomaly || 0},${item.resonancePattern || 0},${item.decg || 0},${item.dbhg || 0},${item.decr || 0},${item.dbhr || 0},${item.mdig || 0},${item.mdir || 0}`;
       }).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -154,7 +154,6 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
                 <TableRow>
                   <TableHead>Date/Time</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Depth (km)</TableHead>
                   <TableHead>Magnitude</TableHead>
                   <TableHead>Type</TableHead>
                   {showMagneticData && (
@@ -181,7 +180,6 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
                     <TableRow key={item.id}>
                       <TableCell>{item.time ? new Date(item.time).toLocaleString() : "N/A"}</TableCell>
                       <TableCell>{item.place || "Unknown"}</TableCell>
-                      <TableCell>{typeof item.depth === 'number' ? item.depth.toFixed(1) : "N/A"}</TableCell>
                       <TableCell className="font-medium text-red-600">
                         {typeof item.mag === 'number' ? item.mag.toFixed(1) : "N/A"}
                       </TableCell>
@@ -204,7 +202,7 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={showMagneticData ? 7 : 5} className="h-24 text-center">
+                    <TableCell colSpan={showMagneticData ? 6 : 4} className="h-24 text-center">
                       No results found matching your search criteria.
                     </TableCell>
                   </TableRow>
