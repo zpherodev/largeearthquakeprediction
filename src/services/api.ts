@@ -1,20 +1,18 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const protocol = window.location.protocol;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 /**
  * Fetches magnetic field data from the API
  * @returns Promise with magnetic field readings
  */
-// api.tsx
 export async function getDashboardSummary() {
-  const res = await fetch(`./components/dashboard/MagneticChart.tsx`);
+  const res = await fetch("http://localhost:5000/api/dashboard-summary");
   if (!res.ok) throw new Error("Failed to fetch dashboard summary");
   return res.json();
 }
 
 export async function getMagneticData() {
   try {
-    const response = await fetch(`./pages/MagneticData.tsx`);
+    const response = await fetch(`${API_BASE_URL}/magnetic-data`);
     if (!response.ok) {
       throw new Error(`Failed to fetch magnetic data: ${response.statusText}`);
     }
@@ -31,7 +29,7 @@ export async function getMagneticData() {
  */
 export async function getPredictions() {
   try {
-    const response = await fetch(`./pages/Predictions.tsx`);
+    const response = await fetch(`${API_BASE_URL}/predictions`);
     if (!response.ok) {
       throw new Error(`Failed to fetch predictions: ${response.statusText}`);
     }
