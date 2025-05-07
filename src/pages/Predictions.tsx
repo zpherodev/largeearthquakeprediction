@@ -1,9 +1,16 @@
-
 import { PredictionTable } from "@/components/predictions/PredictionTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { getPredictions } from "@/services/api";  // Adjust import path
 
 const Predictions = () => {
+  const { data: predictionsData, isLoading, isError } = useQuery({
+    queryKey: ["predictions"],
+    queryFn: getPredictions,
+    refetchInterval: 30000,
+  });
+
   return (
     <div className="flex flex-col gap-4 p-4 lg:p-8">
       <h1 className="text-2xl font-bold">Earthquake Predictions</h1>
@@ -20,8 +27,15 @@ const Predictions = () => {
           </TabsList>
 
           <TabsContent value="active" className="mt-4">
-            <PredictionTable />
-            
+            {isLoading ? (
+              <p>Loading predictions...</p>
+            ) : isError ? (
+              <p>Error loading predictions. Please try again later.</p>
+            ) : (
+              <PredictionTable predictions={predictionsData?.predictions} />
+            )}
+
+            {/* Additional Model Metrics and Feature Importance cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <Card>
                 <CardHeader>
@@ -42,7 +56,6 @@ const Predictions = () => {
                         <p className="text-xs text-muted-foreground">Low false positive rate</p>
                       </div>
                     </div>
-                    
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <h3 className="text-sm font-medium">Recall</h3>
@@ -92,37 +105,7 @@ const Predictions = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="archived" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Archived Predictions</CardTitle>
-                <CardDescription>
-                  Historical prediction records and outcomes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="h-[400px] flex items-center justify-center">
-                <p className="text-muted-foreground text-center">
-                  Historical prediction records would be displayed here in a complete implementation.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="verification" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Prediction Verification</CardTitle>
-                <CardDescription>
-                  Comparison of predictions with actual seismic events
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="h-[400px] flex items-center justify-center">
-                <p className="text-muted-foreground text-center">
-                  Prediction verification metrics and analysis would be displayed here in a complete implementation.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Archived & Verification tabs can be handled similarly */}
         </Tabs>
       </div>
     </div>
