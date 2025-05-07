@@ -1,3 +1,4 @@
+
 import { PredictionTable } from "@/components/predictions/PredictionTable";
 import { HistoricalDataTable } from "@/components/predictions/HistoricalDataTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +39,7 @@ const Predictions = () => {
     queryFn: fetchHistoricalData,
     // Don't refetch this data automatically - it's static
     staleTime: Infinity,
-    cacheTime: Infinity,
+    gcTime: Infinity, // was cacheTime before, now using gcTime
   });
 
   const handleRefresh = async () => {
@@ -81,6 +82,19 @@ const Predictions = () => {
     { feature: "Geological Context", importance: 0.89, trend: "up" }, // Increased importance
     { feature: "Temporal Patterns", importance: 0.81, trend: "up" } // Increased importance
   ];
+
+  // Cast the historical data to the correct type
+  const typedHistoricalData = historicalData ? historicalData.map((item, index) => ({
+    id: item.id || `eq-${index}`,
+    time: item.time || "",
+    latitude: typeof item.latitude === 'number' ? item.latitude : 0,
+    longitude: typeof item.longitude === 'number' ? item.longitude : 0,
+    depth: typeof item.depth === 'number' ? item.depth : 0,
+    mag: typeof item.mag === 'number' ? item.mag : 0,
+    magType: item.magType || "",
+    place: item.place || "",
+    status: item.status || ""
+  })) : [];
 
   return (
     <div className="flex flex-col gap-4 p-4 lg:p-8">
@@ -235,7 +249,7 @@ const Predictions = () => {
 
           <TabsContent value="historical" className="mt-4">
             <HistoricalDataTable 
-              data={historicalData || []} 
+              data={typedHistoricalData} 
               isLoading={isHistoricalLoading} 
               error={historicalError as Error | null}
             />

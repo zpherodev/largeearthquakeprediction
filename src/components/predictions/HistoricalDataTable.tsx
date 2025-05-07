@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, Search, FileDown, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface HistoricalEarthquake {
+export interface HistoricalEarthquake {
   id: string;
   time: string;
   latitude: number;
@@ -32,8 +32,8 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
 
   const filteredData = data.filter(
     (item) => 
-      item.place.toLowerCase().includes(search.toLowerCase()) ||
-      item.mag.toString().includes(search)
+      (item.place && item.place.toLowerCase().includes(search.toLowerCase())) ||
+      (item.mag && item.mag.toString().includes(search))
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -45,7 +45,7 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
     const csvContent = "data:text/csv;charset=utf-8," + 
       "time,latitude,longitude,depth,mag,magType,place,status\n" + 
       data.map(item => 
-        `${item.time},${item.latitude},${item.longitude},${item.depth},${item.mag},${item.magType},"${item.place}",${item.status}`
+        `${item.time || ""},${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${item.mag || 0},${item.magType || ""},"${item.place || ""}",${item.status || ""}`
       ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -118,13 +118,13 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{new Date(item.time).toLocaleString()}</TableCell>
-                  <TableCell>{item.place}</TableCell>
+                  <TableCell>{item.time ? new Date(item.time).toLocaleString() : "N/A"}</TableCell>
+                  <TableCell>{item.place || "Unknown"}</TableCell>
                   <TableCell>{item.depth.toFixed(1)}</TableCell>
                   <TableCell className="font-medium text-red-600">
                     {item.mag.toFixed(1)}
                   </TableCell>
-                  <TableCell>{item.magType}</TableCell>
+                  <TableCell>{item.magType || "Unknown"}</TableCell>
                 </TableRow>
               ))
             ) : (
