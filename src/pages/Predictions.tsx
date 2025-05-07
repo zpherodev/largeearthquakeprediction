@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getPredictions, triggerPrediction } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Predictions = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -54,6 +55,13 @@ const Predictions = () => {
           Generate New Prediction
         </Button>
       </div>
+
+      <Alert variant="default" className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          If you see "No predictions available", that's actually good news! It means our system isn't detecting any magnetic field anomalies that would indicate potential earthquake activity.
+        </AlertDescription>
+      </Alert>
 
       <div className="mt-6">
         <Tabs defaultValue="active" className="w-full">
@@ -152,8 +160,14 @@ const Predictions = () => {
 
           <TabsContent value="archived" className="mt-4">
             <Card>
-              <CardContent className="p-8">
+              <CardContent className="p-8 space-y-4">
                 <p className="text-center text-muted-foreground">No archived predictions available</p>
+                <Alert variant="default" className="bg-green-50 border-green-200">
+                  <Info className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    No archived predictions means the system hasn't needed to generate any earthquake alerts recently. This is excellent news for public safety!
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
           </TabsContent>

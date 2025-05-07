@@ -1,6 +1,8 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Prediction {
   id: string;
@@ -37,12 +39,19 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
             Generated forecasts based on magnetic field analysis
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="py-8 text-center">
             <p className="text-muted-foreground">
               No predictions available
             </p>
           </div>
+          
+          <Alert variant="default" className="bg-green-50 border-green-200">
+            <Info className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              The message "No predictions available" is actually reassuring - it means the system is working properly and not detecting any conditions that would warrant an earthquake prediction. This is much better than seeing a list of potential earthquakes!
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
