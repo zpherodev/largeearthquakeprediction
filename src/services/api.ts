@@ -186,11 +186,11 @@ export async function triggerPrediction() {
   }
 }
 
-// Improved function to fetch historical earthquake data from GitHub
+// Improved function to fetch historical earthquake data from GitHub - Updated with correct URL
 export async function fetchHistoricalData() {
   try {
     console.log("Fetching historical earthquake data");
-    const response = await fetch("https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/main/combined_earthquake_m6_and_above_full_data.csv");
+    const response = await fetch("https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/refs/heads/main/combined_earthquake_m6_and_above_full_data.csv");
     
     if (!response.ok) {
       throw new Error(`Failed to fetch historical data: ${response.status}`);
