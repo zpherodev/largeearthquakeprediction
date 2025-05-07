@@ -1,8 +1,6 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { getPredictions } from "@/services/api";
 
 interface Prediction {
   id: string;
@@ -14,15 +12,11 @@ interface Prediction {
   confidence?: number;
 }
 
-export function PredictionTable() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['predictions'],
-    queryFn: getPredictions,
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
-  });
+interface PredictionTableProps {
+  predictions: Prediction[] | undefined;
+}
 
-  const predictions: Prediction[] = data?.predictions || [];
-
+export function PredictionTable({ predictions = [] }: PredictionTableProps) {
   function getProbabilityColor(probability: number): string {
     if (probability < 30) return "text-green-500";
     if (probability < 60) return "text-amber-500";
@@ -34,25 +28,7 @@ export function PredictionTable() {
     return date.toLocaleString();
   }
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Earthquake Predictions</CardTitle>
-          <CardDescription>
-            Generated forecasts based on magnetic field analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px] flex items-center justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error || predictions.length === 0) {
+  if (!predictions || predictions.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -64,7 +40,7 @@ export function PredictionTable() {
         <CardContent>
           <div className="py-8 text-center">
             <p className="text-muted-foreground">
-              {error ? "Error loading predictions" : "No predictions available"}
+              No predictions available
             </p>
           </div>
         </CardContent>
@@ -89,7 +65,7 @@ export function PredictionTable() {
               <TableHead>Magnitude</TableHead>
               <TableHead>Probability</TableHead>
               <TableHead>Timeframe</TableHead>
-              {predictions[0].confidence !== undefined && (
+              {predictions[0]?.confidence !== undefined && (
                 <TableHead>Confidence</TableHead>
               )}
             </TableRow>

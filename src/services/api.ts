@@ -9,7 +9,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 async function fetchWithErrorHandling(endpoint: string, options = {}) {
   try {
     console.log(`Fetching from: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options as any).headers
+      }
+    });
     
     if (!response.ok) {
       const errorMsg = `API Error (${response.status}): ${response.statusText}`;
@@ -18,7 +24,21 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
       throw new Error(errorMsg);
     }
     
-    return await response.json();
+    // Check if response is empty
+    const text = await response.text();
+    if (!text.trim()) {
+      console.warn("Empty response received from API");
+      return {};
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.error("Raw response:", text);
+      toast.error("Error parsing API response");
+      throw new Error("Invalid JSON response");
+    }
   } catch (error) {
     console.error(`Failed to fetch ${endpoint}:`, error);
     toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
