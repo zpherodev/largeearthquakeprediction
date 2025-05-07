@@ -9,6 +9,8 @@ interface StatusCardProps {
   icon: React.ReactNode;
   trend?: "up" | "down" | "stable";
   className?: string;
+  valueClassName?: string;
+  trendClassName?: string;
 }
 
 export function StatusCard({ 
@@ -17,7 +19,9 @@ export function StatusCard({
   description, 
   icon,
   trend,
-  className 
+  className,
+  valueClassName,
+  trendClassName
 }: StatusCardProps) {
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -26,7 +30,7 @@ export function StatusCard({
         <div className="h-4 w-4 text-muted-foreground">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className={cn("text-2xl font-bold", valueClassName)}>{value}</div>
         <p className="text-xs text-muted-foreground mt-1 flex items-center">
           {description}
           {trend && (
@@ -35,7 +39,8 @@ export function StatusCard({
                 "ml-1 inline-flex items-center rounded-full px-1 py-0.5 text-xs",
                 trend === "up" ? "text-red-500 bg-red-50 dark:bg-red-950/30" :
                 trend === "down" ? "text-green-500 bg-green-50 dark:bg-green-950/30" :
-                "text-gray-500 bg-gray-50 dark:bg-gray-800/30"
+                "text-gray-500 bg-gray-50 dark:bg-gray-800/30",
+                trendClassName
               )}
             >
               {trend === "up" && "↑"}
