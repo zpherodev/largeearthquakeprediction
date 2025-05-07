@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://preview--quake-watch-magnetic-eye.lovable.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || './api';
 
 export async function getDashboardSummary() {
   try {
