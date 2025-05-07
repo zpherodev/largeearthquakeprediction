@@ -7,14 +7,14 @@ const protocol = window.location.protocol;
  */
 // api.tsx
 export async function getDashboardSummary() {
-  const res = await fetch(`${API_BASE_URL}/dashboard-summary`);
+  const res = await fetch(`./components/dashboard/MagneticChart.tsx`);
   if (!res.ok) throw new Error("Failed to fetch dashboard summary");
   return res.json();
 }
 
 export async function getMagneticData() {
   try {
-    const response = await fetch(`${API_BASE_URL}/magnetic-data`);
+    const response = await fetch(`./pages/MagneticData.tsx`);
     if (!response.ok) {
       throw new Error(`Failed to fetch magnetic data: ${response.statusText}`);
     }
@@ -31,7 +31,7 @@ export async function getMagneticData() {
  */
 export async function getPredictions() {
   try {
-    const response = await fetch(`${API_BASE_URL}/predictions`);
+    const response = await fetch(`./pages/Predictions.tsx`);
     if (!response.ok) {
       throw new Error(`Failed to fetch predictions: ${response.statusText}`);
     }
