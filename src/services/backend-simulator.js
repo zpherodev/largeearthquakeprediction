@@ -143,3 +143,19 @@ console.log('1. Create a Python Flask/FastAPI server that loads your model');
 console.log('2. Use the model to process EMAG2 data');
 console.log('3. Set up routes that match these API endpoints');
 console.log('4. Replace this simulator with your Python backend');
+app.get('/api/dashboard-summary', (req, res) => {
+  const magnetic = generateMagneticData();
+  const modelStatus = generateModelStatus();
+  const risk = generateRiskAssessment();
+  const predictions = generatePredictions();
+
+  const latestMag = magnetic.data[magnetic.data.length - 1];
+
+  res.json({
+    currentReading: latestMag,
+    modelStatus,
+    riskAssessment: risk,
+    predictions,
+  });
+});
+
