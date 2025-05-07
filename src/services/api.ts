@@ -36,7 +36,12 @@ export async function getPredictions() {
     if (!response.ok) {
       throw new Error(`Failed to fetch predictions: ${response.statusText}`);
     }
-    return await response.json();
+    const data = await response.json();
+
+    // Filter predictions to include only those with magnitude 6.0 or higher
+    const filteredPredictions = data.predictions.filter((prediction: { magnitude: number }) => prediction.magnitude >= 6.0);
+
+    return { predictions: filteredPredictions };
   } catch (error) {
     console.error("Error fetching predictions:", error);
     // Return mock data as fallback
