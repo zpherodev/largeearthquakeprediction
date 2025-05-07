@@ -38,14 +38,14 @@ export async function getPredictions() {
     }
     const data = await response.json();
 
-    // Filter predictions to include only those with magnitude 6.0 or higher
-    const filteredPredictions = data.predictions.filter((prediction: { magnitude: number }) => prediction.magnitude >= 6.0);
+    // Filter out predictions with a magnitude below 6.0
+    const filteredPredictions = data.predictions.filter((prediction) => prediction.magnitude >= 6.0);
 
     return { predictions: filteredPredictions };
   } catch (error) {
     console.error("Error fetching predictions:", error);
-    // Return mock data as fallback
-    return generateMockPredictions();
+    // No fallback data, only log the error
+    throw error; // Re-throw the error so it can be handled elsewhere
   }
 }
 
