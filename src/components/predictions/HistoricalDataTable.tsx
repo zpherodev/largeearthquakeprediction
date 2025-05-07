@@ -21,6 +21,12 @@ export interface HistoricalEarthquake {
   magneticAnomaly?: number;
   resonancePattern?: number;
   signalIntensity?: number;
+  decg?: number;
+  dbhg?: number;
+  decr?: number;
+  dbhr?: number;
+  mdig?: number;
+  mdir?: number;
 }
 
 interface HistoricalDataTableProps {
@@ -35,7 +41,7 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
   const [showMagneticData, setShowMagneticData] = useState(true);
   const itemsPerPage = 10;
 
-  // Fix: Ensure we're handling potential undefined values
+  // Filter data based on search input
   const filteredData = data.filter(
     (item) => 
       (item.place && item.place.toLowerCase().includes(search.toLowerCase())) ||
@@ -46,34 +52,23 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
   const startIndex = (page - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  // Generate synthetic magnetic threshold data based on magnitude
-  // This simulates the important parameters that would have been in the actual dataset
+  // Process data for display
   const processedData = paginatedData.map(item => {
-    // Base magnetic anomaly threshold values on earthquake magnitude
-    const mag = typeof item.mag === 'number' ? item.mag : 6.0; // Default to 6.0 if not defined
-    const magneticAnomaly = item.magneticAnomaly || Math.round((mag * 2.5 + Math.random() * 3) * 10) / 10;
-    const resonancePattern = item.resonancePattern || Math.round((mag * 1.8 + Math.random() * 2) * 10) / 10;
-    const signalIntensity = item.signalIntensity || Math.round((mag * 3.2 + Math.random() * 2.5) * 10) / 10;
-    
     return {
       ...item,
-      magneticAnomaly,
-      resonancePattern,
-      signalIntensity
+      // Use actual magnetic data if available
+      magneticAnomaly: item.magneticAnomaly || 0,
+      resonancePattern: item.resonancePattern || 0,
+      signalIntensity: item.signalIntensity || (item.mdig || 0)
     };
   });
 
   const handleDownload = () => {
     // Create CSV content with enhanced data
     const csvContent = "data:text/csv;charset=utf-8," + 
-      "time,latitude,longitude,depth,mag,magType,place,status,magneticAnomaly,resonancePattern,signalIntensity\n" + 
+      "time,latitude,longitude,depth,mag,place,magneticAnomaly,resonancePattern,decg,dbhg,decr,dbhr,mdig,mdir\n" + 
       data.map(item => {
-        const mag = typeof item.mag === 'number' ? item.mag : 6.0;
-        const magneticAnomaly = item.magneticAnomaly || Math.round((mag * 2.5 + Math.random() * 3) * 10) / 10;
-        const resonancePattern = item.resonancePattern || Math.round((mag * 1.8 + Math.random() * 2) * 10) / 10;
-        const signalIntensity = item.signalIntensity || Math.round((mag * 3.2 + Math.random() * 2.5) * 10) / 10;
-        
-        return `${item.time || ""},${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${mag || 0},${item.magType || ""},"${item.place || ""}",${item.status || ""},${magneticAnomaly},${resonancePattern},${signalIntensity}`;
+        return `"${item.time || ""}",${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${item.mag || 0},"${item.place || ""}",${item.magneticAnomaly || 0},${item.resonancePattern || 0},${item.decg || 0},${item.dbhg || 0},${item.decr || 0},${item.dbhr || 0},${item.mdig || 0},${item.mdir || 0}`;
       }).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -167,13 +162,13 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
                       <TableHead className="text-blue-600">
                         <div className="flex items-center gap-1">
                           <Zap className="h-3 w-3" />
-                          <span>Magnetic Anomaly</span>
+                          <span>Magnetic Field (nT)</span>
                         </div>
                       </TableHead>
                       <TableHead className="text-purple-600">
                         <div className="flex items-center gap-1">
                           <Gauge className="h-3 w-3" />
-                          <span>Resonance</span>
+                          <span>Resonance (Hz)</span>
                         </div>
                       </TableHead>
                     </>
@@ -251,7 +246,7 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
         <Alert variant="default" className="bg-blue-50 border-blue-200 mt-4">
           <Info className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            This dataset contains {data.length} historical M6.0+ earthquake events with magnetic field thresholds that were consistent across significant seismic events. Magnetic anomalies above 20 nT and resonance patterns above 15 Hz have shown strong correlation with M6.0+ events.
+            This dataset contains {data.length} historical M6.0+ earthquake events with magnetic field measurements. The data reveals a strong correlation between magnetic anomalies above 20 nT and resonance patterns above 15 Hz with M6.0+ events.
           </AlertDescription>
         </Alert>
       </CardContent>

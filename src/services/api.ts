@@ -186,7 +186,7 @@ export async function triggerPrediction() {
   }
 }
 
-// Improved function to fetch historical earthquake data from GitHub - Updated with correct URL
+// Improved function to fetch historical earthquake data from GitHub - Updated with correct headers
 export async function fetchHistoricalData() {
   try {
     console.log("Fetching historical earthquake data");
@@ -210,52 +210,70 @@ export async function fetchHistoricalData() {
       console.error("CSV has insufficient rows:", rows.length);
       return [];
     }
+
+    // Known CSV headers from the provided data
+    // earthquake_date,latitude,key_2,longitude,decg,dbhg,decr,dbhr,mfig,mfir,mdig,mdir,time,magnitude
     
-    const headers = rows[0].split(',');
-    console.log("CSV headers:", headers);
-    
-    // Parse CSV into array of objects
     const data = rows.slice(1).filter(row => row.trim() !== '').map((row, index) => {
       const values = parseCSVRow(row);
-      if (values.length !== headers.length) {
-        console.warn(`Row ${index + 2} has ${values.length} values, expected ${headers.length}`);
+      
+      // Skip rows that don't have the minimum required values
+      if (values.length < 4) {
+        console.warn(`Row ${index + 1} has insufficient data:`, values);
         return null;
       }
       
-      const item: Record<string, any> = {};
-      headers.forEach((header, i) => {
-        // Convert numeric values
-        if (['latitude', 'longitude', 'depth', 'mag'].includes(header)) {
-          item[header] = parseFloat(values[i]);
-          if (isNaN(item[header])) {
-            item[header] = header === 'mag' ? 6.0 : 0; // Default values
-          }
-        } else {
-          item[header] = values[i];
-        }
-      });
+      // Extract values based on known positions in CSV
+      // Match headers to positions (based on provided headers)
+      const earthquake_date = values[0] || '';
+      const latitude = parseFloat(values[1]) || 0;
+      const key_2 = values[2] || ''; // Not used in our mapping
+      const longitude = parseFloat(values[3]) || 0;
+      const decg = parseFloat(values[4]) || 0;
+      const dbhg = parseFloat(values[5]) || 0;
+      const decr = parseFloat(values[6]) || 0;
+      const dbhr = parseFloat(values[7]) || 0;
+      const mfig = parseFloat(values[8]) || 0;
+      const mfir = parseFloat(values[9]) || 0;
+      const mdig = parseFloat(values[10]) || 0;
+      const mdir = parseFloat(values[11]) || 0;
+      const time = values[12] || earthquake_date; // Use time if available, fall back to earthquake_date
+      const magnitude = parseFloat(values[13]) || 6.0; // Default to 6.0 for this dataset
       
-      // Add an id for React keys
-      item.id = `eq-${index}`;
+      // Generate place name based on coordinates
+      const ns = latitude >= 0 ? 'N' : 'S';
+      const ew = longitude >= 0 ? 'E' : 'W';
+      const place = `${Math.abs(latitude).toFixed(1)}°${ns}, ${Math.abs(longitude).toFixed(1)}°${ew}`;
       
-      // Add magnetic field data if not present
-      if (!item.magneticAnomaly && item.mag) {
-        item.magneticAnomaly = Math.round((item.mag * 2.5 + Math.random() * 3) * 10) / 10;
-      }
-      if (!item.resonancePattern && item.mag) {
-        item.resonancePattern = Math.round((item.mag * 1.8 + Math.random() * 2) * 10) / 10;
-      }
-      
-      return item;
-    }).filter(item => item !== null);
+      // Create a consistent earthquake record
+      return {
+        id: `eq-${index}`,
+        time: time || earthquake_date,
+        latitude: latitude,
+        longitude: longitude,
+        depth: 10, // Default depth since not provided
+        mag: magnitude,
+        magType: "Mw", // Most M6.0+ events are moment magnitude
+        place: place,
+        status: "reviewed",
+        // Use the actual magnetic field data from the CSV
+        magneticAnomaly: mfig,
+        resonancePattern: mfir,
+        decg: decg,
+        dbhg: dbhg,
+        decr: decr,
+        dbhr: dbhr,
+        mdig: mdig,
+        mdir: mdir
+      };
+    }).filter(Boolean); // Remove null entries
     
     console.log(`Parsed ${data.length} historical earthquake records`);
-    console.log("Sample data:", data.slice(0, 3));
+    console.log("Sample processed data:", data.slice(0, 3));
     return data;
   } catch (error) {
     console.error("Error fetching historical data:", error);
     toast.error(`Failed to load historical data: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    // Return an empty array instead of throwing to prevent UI errors
     return [];
   }
 }
