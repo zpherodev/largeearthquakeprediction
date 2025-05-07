@@ -2,37 +2,27 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { getRiskAssessment } from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
 
 interface RiskAssessmentProps {
   className?: string;
 }
 
 export function RiskAssessment({ className }: RiskAssessmentProps) {
-  const [riskLevel, setRiskLevel] = useState(15);
-  const [trend, setTrend] = useState<"increasing" | "decreasing" | "stable">("stable");
+  const { data: riskData, isLoading, error } = useQuery({
+    queryKey: ['riskAssessment'],
+    queryFn: getRiskAssessment,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
   
-  useEffect(() => {
-    // Simulate dynamic risk level changes
-    const interval = setInterval(() => {
-      setRiskLevel(prev => {
-        // Random value between -5 and 5
-        const change = Math.floor(Math.random() * 11) - 5;
-        const newValue = Math.max(0, Math.min(100, prev + change));
-        
-        if (change > 2) {
-          setTrend("increasing");
-        } else if (change < -2) {
-          setTrend("decreasing");
-        } else {
-          setTrend("stable");
-        }
-        
-        return newValue;
-      });
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  const riskLevel = riskData?.riskLevel || 15;
+  const trend = riskData?.trend || "stable";
+  const factors = riskData?.factors || {
+    magneticAnomalies: "Moderate",
+    historicalPatterns: "Low Correlation",
+    signalIntensity: "Stable"
+  };
   
   const getRiskColor = () => {
     if (riskLevel < 30) return "bg-green-500";
@@ -51,6 +41,22 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
     if (trend === "decreasing") return "Risk is decreasing";
     return "Risk is stable";
   };
+
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Earthquake Risk Assessment</CardTitle>
+          <CardDescription>Based on current magnetic field data</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px] flex items-center justify-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={className}>
@@ -82,15 +88,15 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
                 <span>Magnetic Anomalies</span>
-                <span className="text-xs font-medium">Moderate</span>
+                <span className="text-xs font-medium">{factors.magneticAnomalies}</span>
               </li>
               <li className="flex items-center justify-between">
                 <span>Historical Patterns</span>
-                <span className="text-xs font-medium">Low Correlation</span>
+                <span className="text-xs font-medium">{factors.historicalPatterns}</span>
               </li>
               <li className="flex items-center justify-between">
                 <span>Signal Intensity</span>
-                <span className="text-xs font-medium">Stable</span>
+                <span className="text-xs font-medium">{factors.signalIntensity}</span>
               </li>
             </ul>
           </div>
