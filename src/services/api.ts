@@ -6,7 +6,7 @@ export async function getDashboardSummary() {
   try {
     const res = await fetch(`${API_BASE_URL}/dashboard-summary`);
     if (!res.ok) {
-      const error = new Error(res.status === 404 ? "Dashboard summary endpoint not found" : "Failed to fetch dashboard summary");
+      const error = new Error(res.status === 404 ? "Dashboard summary endpoint not found" : `Failed to fetch dashboard summary: ${res.statusText}`);
       toast.error(error.message);
       throw error;
     }
@@ -22,11 +22,12 @@ export async function getMagneticData() {
   try {
     const response = await fetch(`${API_BASE_URL}/magnetic-data`);
     if (!response.ok) {
-      const error = new Error(response.status === 404 ? "NOAA API not found, serving cached data or empty" : `Failed to fetch magnetic data: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "Magnetic data endpoint not found or NOAA API unavailable" : `Failed to fetch magnetic data: ${response.statusText}`);
       toast.error(error.message);
       throw error;
     }
-    return await response.json();
+    const data = await response.json();
+    return data.data || []; // Ensure empty array if no data
   } catch (error) {
     console.error("Error fetching magnetic data:", error);
     toast.error(error.message);
@@ -38,7 +39,7 @@ export async function getPredictions() {
   try {
     const response = await fetch(`${API_BASE_URL}/predictions`);
     if (!response.ok) {
-      const error = new Error(response.status === 404 ? "Predictions endpoint not found" : `Failed to fetch predictions: ${response.statusText}`);
+      const error = new Error(response.status === 404 ? "Predictions endpoint not found or NOAA API unavailable" : `Failed to fetch predictions: ${response.statusText}`);
       toast.error(error.message);
       throw error;
     }
