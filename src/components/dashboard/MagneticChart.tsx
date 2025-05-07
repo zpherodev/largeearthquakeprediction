@@ -5,7 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { getMagneticData } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, SignalHigh, SignalMedium, SignalLow } from "lucide-react";
 import { toast } from "sonner";
 
 const COLORS = {
@@ -42,6 +42,54 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
       console.error("MagneticChart error:", error);
     }
   }, [magneticData, error]);
+
+  // Calculate signal characteristics from the data
+  const getSignalCharacteristics = () => {
+    if (!magneticData?.data || !Array.isArray(magneticData.data) || magneticData.data.length === 0) {
+      return {
+        strength: 0,
+        anomalyScore: 0,
+        signalToNoise: 0
+      };
+    }
+
+    // Calculate the average magnetic field strength
+    const values = magneticData.data
+      .map(item => parseFloat(item.value) || parseFloat(String(item.mfig)) || 0)
+      .filter(val => !isNaN(val));
+    
+    if (values.length === 0) return { strength: 0, anomalyScore: 0, signalToNoise: 0 };
+    
+    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+    
+    // Calculate standard deviation
+    const squareDiffs = values.map(value => Math.pow(value - avg, 2));
+    const avgSquareDiff = squareDiffs.reduce((sum, diff) => sum + diff, 0) / squareDiffs.length;
+    const stdDev = Math.sqrt(avgSquareDiff);
+    
+    // Get the most recent value
+    const latestValue = values[values.length - 1] || 0;
+    
+    // Calculate signal characteristics
+    const strength = Math.min(100, Math.max(0, latestValue * 5)); // Scale appropriately
+    const anomalyScore = Math.min(100, Math.max(0, Math.abs(latestValue - avg) / stdDev * 25));
+    const signalToNoise = stdDev > 0 ? Math.min(100, Math.max(0, (avg / stdDev) * 10)) : 50;
+    
+    return {
+      strength,
+      anomalyScore,
+      signalToNoise
+    };
+  };
+
+  const signalCharacteristics = getSignalCharacteristics();
+
+  // Determine signal status icon based on anomaly score
+  const getSignalStatusIcon = (score: number) => {
+    if (score > 70) return <SignalHigh className="h-5 w-5 text-red-500" />;
+    if (score > 30) return <SignalMedium className="h-5 w-5 text-amber-500" />;
+    return <SignalLow className="h-5 w-5 text-green-500" />;
+  };
 
   if (isLoading) {
     return (
@@ -169,6 +217,54 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
               />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+        
+        {/* Signal Characteristics Section */}
+        <div className="mt-6 space-y-4">
+          <h3 className="text-sm font-medium">Signal Characteristics</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Magnetic Intensity</span>
+                {getSignalStatusIcon(signalCharacteristics.strength)}
+              </div>
+              <div className="w-full h-1.5 bg-gray-200 rounded-full">
+                <div 
+                  className={`h-1.5 rounded-full ${signalCharacteristics.strength > 70 ? 'bg-red-500' : signalCharacteristics.strength > 30 ? 'bg-amber-500' : 'bg-green-500'}`}
+                  style={{ width: `${signalCharacteristics.strength}%` }}
+                ></div>
+              </div>
+              <span className="text-xs font-medium">{Math.round(signalCharacteristics.strength)}%</span>
+            </div>
+            
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Anomaly Score</span>
+                {getSignalStatusIcon(signalCharacteristics.anomalyScore)}
+              </div>
+              <div className="w-full h-1.5 bg-gray-200 rounded-full">
+                <div 
+                  className={`h-1.5 rounded-full ${signalCharacteristics.anomalyScore > 70 ? 'bg-red-500' : signalCharacteristics.anomalyScore > 30 ? 'bg-amber-500' : 'bg-green-500'}`}
+                  style={{ width: `${signalCharacteristics.anomalyScore}%` }}
+                ></div>
+              </div>
+              <span className="text-xs font-medium">{Math.round(signalCharacteristics.anomalyScore)}%</span>
+            </div>
+            
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Signal/Noise</span>
+                {getSignalStatusIcon(100 - signalCharacteristics.signalToNoise)}
+              </div>
+              <div className="w-full h-1.5 bg-gray-200 rounded-full">
+                <div 
+                  className={`h-1.5 rounded-full ${signalCharacteristics.signalToNoise > 70 ? 'bg-green-500' : signalCharacteristics.signalToNoise > 30 ? 'bg-amber-500' : 'bg-red-500'}`}
+                  style={{ width: `${signalCharacteristics.signalToNoise}%` }}
+                ></div>
+              </div>
+              <span className="text-xs font-medium">{Math.round(signalCharacteristics.signalToNoise)}%</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
