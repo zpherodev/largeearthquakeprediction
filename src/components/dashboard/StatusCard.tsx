@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { Progress } from "@/components/ui/progress";
 
 interface StatusCardProps {
   title: string;
@@ -14,6 +15,10 @@ interface StatusCardProps {
   trendClassName?: string;
   loading?: boolean;
   pulseEffect?: boolean;
+  showProgress?: boolean;
+  progressValue?: number;
+  progressColor?: string;
+  maxValue?: number;
 }
 
 export function StatusCard({ 
@@ -26,7 +31,11 @@ export function StatusCard({
   valueClassName,
   trendClassName,
   loading = false,
-  pulseEffect = true
+  pulseEffect = true,
+  showProgress = false,
+  progressValue = 0,
+  progressColor,
+  maxValue = 100
 }: StatusCardProps) {
   // Add animation effect when value changes
   useEffect(() => {
@@ -48,7 +57,7 @@ export function StatusCard({
   // Determine trend style
   const getTrendStyle = () => {
     // For prediction confidence and metrics, up is good
-    if (title.includes("Confidence") || title.includes("Accuracy")) {
+    if (title.includes("Confidence") || title.includes("Accuracy") || title.includes("Precision") || title.includes("Recall") || title.includes("F1")) {
       return trend === "up" ? "text-green-500 bg-green-50 dark:bg-green-950/30" :
              trend === "down" ? "text-red-500 bg-red-50 dark:bg-red-950/30" :
              "text-gray-500 bg-gray-50 dark:bg-gray-800/30";
@@ -68,6 +77,25 @@ export function StatusCard({
       if (value.includes("Low") || value.includes("Normal")) return "text-green-500";
     }
     return "";
+  };
+
+  // Determine progress color
+  const getProgressColor = () => {
+    if (progressColor) return progressColor;
+    
+    const percent = (progressValue / maxValue) * 100;
+    
+    if (title.includes("Confidence") || title.includes("Accuracy") || title.includes("Precision") || title.includes("Recall") || title.includes("F1")) {
+      // For metrics, higher is better
+      if (percent >= 80) return "bg-green-500";
+      if (percent >= 60) return "bg-amber-500";
+      return "bg-red-500";
+    } else {
+      // For risk metrics, lower is better
+      if (percent <= 30) return "bg-green-500";
+      if (percent <= 60) return "bg-amber-500";
+      return "bg-red-500";
+    }
   };
 
   return (
@@ -102,6 +130,17 @@ export function StatusCard({
             </span>
           )}
         </p>
+        
+        {showProgress && (
+          <div className="mt-2">
+            <Progress 
+              value={progressValue} 
+              max={maxValue}
+              className="h-1.5 w-full bg-gray-200"
+              indicatorClassName={getProgressColor()}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
