@@ -1,86 +1,104 @@
+
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || './api';
+// Update to point to the actual backend server
+// We'll use a conditional to support both development and production environments
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-export async function getDashboardSummary() {
+// Helper function for API requests with proper error handling
+async function fetchWithErrorHandling(endpoint: string, options = {}) {
   try {
-    const res = await fetch(`${API_BASE_URL}/dashboard-summary`);
-    if (!res.ok) {
-      const error = new Error(res.status === 404 ? "Dashboard summary endpoint not found" : `Failed to fetch dashboard summary: ${res.statusText}`);
-      toast.error(error.message);
-      throw error;
+    console.log(`Fetching from: ${API_BASE_URL}${endpoint}`);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    
+    if (!response.ok) {
+      const errorMsg = `API Error (${response.status}): ${response.statusText}`;
+      console.error(errorMsg);
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
-    return res.json();
+    
+    return await response.json();
   } catch (error) {
-    console.error("Error fetching dashboard summary:", error);
-    toast.error(error.message);
+    console.error(`Failed to fetch ${endpoint}:`, error);
+    toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 }
 
+export async function getDashboardSummary() {
+  return fetchWithErrorHandling('/dashboard-summary');
+}
+
 export async function getMagneticData() {
   try {
-    const response = await fetch(`${API_BASE_URL}/magnetic-data`);
-    if (!response.ok) {
-      const error = new Error(response.status === 404 ? "Magnetic data endpoint not found or NOAA API unavailable" : `Failed to fetch magnetic data: ${response.statusText}`);
-      toast.error(error.message);
-      throw error;
-    }
-    const data = await response.json();
-    return data.data || []; // Ensure empty array if no data
+    const data = await fetchWithErrorHandling('/magnetic-data');
+    // Ensure we have the right structure even if the API response format changes
+    return data.data ? { data: data.data } : { data: [] };
   } catch (error) {
-    console.error("Error fetching magnetic data:", error);
-    toast.error(error.message);
-    throw error;
+    console.error("Error in getMagneticData:", error);
+    // Return empty array to prevent UI errors
+    return { data: [] };
   }
 }
 
 export async function getPredictions() {
   try {
-    const response = await fetch(`${API_BASE_URL}/predictions`);
-    if (!response.ok) {
-      const error = new Error(response.status === 404 ? "Predictions endpoint not found or NOAA API unavailable" : `Failed to fetch predictions: ${response.statusText}`);
-      toast.error(error.message);
-      throw error;
-    }
-    const data = await response.json();
-    const filteredPredictions = data.predictions.filter((prediction) => prediction.magnitude >= 6.0);
-    return { predictions: filteredPredictions };
+    const data = await fetchWithErrorHandling('/predictions');
+    return { predictions: data.predictions || [] };
   } catch (error) {
-    console.error("Error fetching predictions:", error);
-    toast.error(error.message);
-    throw error;
+    console.error("Error in getPredictions:", error);
+    return { predictions: [] };
   }
 }
 
 export async function getModelStatus() {
   try {
-    const response = await fetch(`${API_BASE_URL}/model-status`);
-    if (!response.ok) {
-      const error = new Error(response.status === 404 ? "Model status endpoint not found" : `Failed to fetch model status: ${response.statusText}`);
-      toast.error(error.message);
-      throw error;
-    }
-    return await response.json();
+    return await fetchWithErrorHandling('/model-status');
   } catch (error) {
-    console.error("Error fetching model status:", error);
-    toast.error(error.message);
-    throw error;
+    console.error("Error in getModelStatus:", error);
+    // Return default data to prevent UI errors
+    return {
+      cpuUsage: 0,
+      memoryUsage: 0,
+      lastUpdate: new Date().toISOString(),
+      modelStatus: "error",
+      modelVersion: "Unknown",
+      accuracy: 0,
+      precision: 0,
+      recall: 0
+    };
   }
 }
 
 export async function getRiskAssessment() {
   try {
-    const response = await fetch(`${API_BASE_URL}/risk-assessment`);
-    if (!response.ok) {
-      const error = new Error(response.status === 404 ? "Risk assessment endpoint not found" : `Failed to fetch risk assessment: ${response.statusText}`);
-      toast.error(error.message);
-      throw error;
-    }
-    return await response.json();
+    return await fetchWithErrorHandling('/risk-assessment');
   } catch (error) {
-    console.error("Error fetching risk assessment:", error);
-    toast.error(error.message);
-    throw error;
+    console.error("Error in getRiskAssessment:", error);
+    // Return default data to prevent UI errors
+    return {
+      riskLevel: 0,
+      trend: "unknown",
+      factors: {
+        magneticAnomalies: "Unknown",
+        historicalPatterns: "Unknown",
+        signalIntensity: "Unknown"
+      }
+    };
+  }
+}
+
+export async function triggerPrediction() {
+  try {
+    return await fetchWithErrorHandling('/trigger-prediction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  } catch (error) {
+    console.error("Error triggering prediction:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
