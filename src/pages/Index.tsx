@@ -7,6 +7,7 @@ import { RiskAssessment } from "@/components/dashboard/RiskAssessment";
 import { EarthquakeMap } from "@/components/maps/EarthquakeMap";
 import { ModelStatus } from "@/components/models/ModelStatus";
 import { useQuery } from '@tanstack/react-query';
+import { getMagneticData } from "@/services/api";
 
 const Dashboard = () => {
   const { data: magneticData, isLoading } = useQuery({
