@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Update to point to the actual backend server
@@ -46,6 +45,43 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
   }
 }
 
+// Fallback function to directly fetch from NOAA when the backend fails
+export async function fetchNOAAMagneticData() {
+  try {
+    console.log("Attempting direct fetch from NOAA API");
+    const response = await fetch("https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json");
+    
+    if (!response.ok) {
+      throw new Error(`NOAA API Error: ${response.status}`);
+    }
+    
+    const rawData = await response.json();
+    if (!Array.isArray(rawData)) {
+      throw new Error("Unexpected data format from NOAA");
+    }
+    
+    // Transform the data into the format our app expects
+    const formattedData = rawData.slice(-30).map(entry => {
+      const timestamp = entry.time_tag;
+      const value = parseFloat(entry.hp || 0).toFixed(2);
+      
+      return {
+        timestamp,
+        label: timestamp ? timestamp.substring(11, 16) : "",
+        value,
+        decg: 0, dbhg: 0, decr: 0, dbhr: 0,
+        mfig: parseFloat(value), mfir: 0, mdig: 0, mdir: 0
+      };
+    });
+    
+    return { data: formattedData };
+  } catch (error) {
+    console.error("Direct NOAA fetch error:", error);
+    toast.error(`Failed to fetch magnetic data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return { data: [] };
+  }
+}
+
 export async function getDashboardSummary() {
   return fetchWithErrorHandling('/dashboard-summary');
 }
@@ -54,11 +90,16 @@ export async function getMagneticData() {
   try {
     const data = await fetchWithErrorHandling('/magnetic-data');
     // Ensure we have the right structure even if the API response format changes
+    if (!data.data || data.data.length === 0) {
+      console.log("No data from backend API, attempting direct NOAA fetch");
+      return fetchNOAAMagneticData();
+    }
     return data.data ? { data: data.data } : { data: [] };
   } catch (error) {
     console.error("Error in getMagneticData:", error);
-    // Return empty array to prevent UI errors
-    return { data: [] };
+    console.log("Backend API error, attempting direct NOAA fetch");
+    // Fallback to direct NOAA API
+    return fetchNOAAMagneticData();
   }
 }
 

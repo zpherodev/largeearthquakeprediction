@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { getMagneticData } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 
 const COLORS = {
   primary: "hsl(var(--primary))",
@@ -17,18 +20,39 @@ interface MagneticChartProps {
 }
 
 export function MagneticChart({ title, description }: MagneticChartProps) {
-  const { data: magneticData, isLoading, error } = useQuery({
+  const { data: magneticData, isLoading, error, refetch } = useQuery({
     queryKey: ['magneticData'],
     queryFn: getMagneticData,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  const handleRefresh = async () => {
+    toast.info("Refreshing magnetic data...");
+    await refetch();
+  };
+
+  // Log the data we received for debugging
+  useEffect(() => {
+    if (magneticData) {
+      console.log("MagneticChart data:", magneticData);
+    }
+    if (error) {
+      console.error("MagneticChart error:", error);
+    }
+  }, [magneticData, error]);
+
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -42,9 +66,15 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -56,12 +86,45 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
   }
 
   const chartData = magneticData?.data || [];
+  const hasData = Array.isArray(chartData) && chartData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex flex-col items-center justify-center">
+            <div className="text-muted-foreground mb-4">No magnetic data available</div>
+            <Button onClick={handleRefresh}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </CardHeader>
       <CardContent className="pt-2">
         <div className="h-[300px]">
