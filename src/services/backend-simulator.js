@@ -1,3 +1,4 @@
+
 /**
  * This file provides a mock backend server for local development
  * To use it, you need to install Express:
@@ -15,11 +16,16 @@ const port = 5000;
 app.use(cors());
 app.use(express.json());
 
-// Global training state
+// Global training and practice state
 let lastTrainingDate = null;
 let isCurrentlyTraining = false;
+let isPracticing = false;
 let trainingProgress = 0;
+let practiceProgress = 0;
 let trainingLog = [];
+let practiceLog = [];
+let lastPracticeDate = null;
+let practiceCount = 0;
 
 // Generate simulated magnetic data
 function generateMagneticData() {
@@ -92,12 +98,14 @@ function generateModelStatus() {
     cpuUsage: Math.floor(Math.random() * 30) + 50,
     memoryUsage: Math.floor(Math.random() * 20) + 60,
     lastUpdate: new Date().toISOString(),
-    modelStatus: isCurrentlyTraining ? "training" : ["analyzing", "predicting", "idle"][Math.floor(Math.random() * 3)],
+    modelStatus: isCurrentlyTraining ? "training" : isPracticing ? "practicing" : ["analyzing", "predicting", "idle"][Math.floor(Math.random() * 3)],
     modelVersion: "LEPAM v1.0.4",
     accuracy: 76,
     precision: 71,
     recall: 68,
     lastTrainingDate: lastTrainingDate ? lastTrainingDate.toISOString() : null,
+    lastPracticeDate: lastPracticeDate ? lastPracticeDate.toISOString() : null,
+    practiceCount: practiceCount,
     trainingScheduled: shouldTrainThisWeek()
   };
   
@@ -108,6 +116,16 @@ function generateModelStatus() {
       cpuUsage: Math.floor(Math.random() * 20) + 75, // Higher CPU during training
       memoryUsage: Math.floor(Math.random() * 15) + 80, // Higher memory during training
       trainingProgress
+    };
+  }
+  
+  // Add practice info if currently practicing
+  if (isPracticing) {
+    return {
+      ...baseStatus,
+      cpuUsage: Math.floor(Math.random() * 15) + 60, // Moderate CPU during practice
+      memoryUsage: Math.floor(Math.random() * 10) + 65, // Moderate memory during practice
+      practiceProgress
     };
   }
   
@@ -143,9 +161,18 @@ function shouldTrainThisWeek() {
   return daysSinceLastTraining >= 7;
 }
 
+// Check if practice should happen (multiple times per day)
+function shouldPractice() {
+  if (!lastPracticeDate) return true;
+  
+  const now = new Date();
+  const hoursSinceLastPractice = (now - lastPracticeDate) / (1000 * 60 * 60);
+  return hoursSinceLastPractice >= 3; // Practice every 3 hours
+}
+
 // Run weekly training simulation
 function simulateTraining() {
-  if (isCurrentlyTraining) return;
+  if (isCurrentlyTraining || isPracticing) return;
   
   console.log("Starting weekly model training simulation...");
   isCurrentlyTraining = true;
@@ -195,11 +222,78 @@ function simulateTraining() {
   }, 1200); // Updates every 1.2 seconds for a total of ~24 seconds
 }
 
+// Run practice prediction simulation
+function simulatePractice() {
+  if (isCurrentlyTraining || isPracticing) return;
+  
+  console.log("Starting prediction practice simulation...");
+  isPracticing = true;
+  practiceProgress = 0;
+  
+  // Add initial log entry
+  practiceLog.push({
+    timestamp: new Date().toISOString(),
+    message: "Practice session started - Generating synthetic magnetic data"
+  });
+  
+  // Simulate practice progress over ~15 seconds
+  const practiceInterval = setInterval(() => {
+    practiceProgress += 10;
+    
+    // Add log entries at specific points
+    if (practiceProgress === 20) {
+      practiceLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Magnetic anomaly patterns identified"
+      });
+    } else if (practiceProgress === 50) {
+      practiceLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Processing region-specific correlation factors"
+      });
+    } else if (practiceProgress === 80) {
+      practiceLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Calculating probabilistic predictions and thresholds"
+      });
+    }
+    
+    if (practiceProgress >= 100) {
+      clearInterval(practiceInterval);
+      practiceProgress = 100;
+      isPracticing = false;
+      lastPracticeDate = new Date();
+      practiceCount++;
+      
+      // Determine if prediction accuracy improved
+      const improvement = (Math.random() < 0.7); // 70% chance of improvement
+      const improvementAmount = (Math.random() * 0.2 + 0.1).toFixed(2); // 0.1% to 0.3%
+      
+      practiceLog.push({
+        timestamp: lastPracticeDate.toISOString(),
+        message: improvement 
+          ? `Practice complete - Prediction accuracy improved by ${improvementAmount}%` 
+          : "Practice complete - Model validated with existing parameters"
+      });
+      
+      console.log(`Practice session #${practiceCount} completed`);
+    }
+  }, 300); // Updates every 300ms for a total of ~3 seconds
+}
+
 // Check for weekly training schedule
 function checkTrainingSchedule() {
-  if (shouldTrainThisWeek() && !isCurrentlyTraining) {
+  if (shouldTrainThisWeek() && !isCurrentlyTraining && !isPracticing) {
     console.log("Weekly training check - training needed");
     simulateTraining();
+  }
+}
+
+// Check for regular practice schedule
+function checkPracticeSchedule() {
+  if (shouldPractice() && !isCurrentlyTraining && !isPracticing) {
+    console.log("Regular practice check - practice needed");
+    simulatePractice();
   }
 }
 
@@ -238,11 +332,11 @@ app.get('/api/dashboard-summary', (req, res) => {
 
 // New endpoint to manually trigger training
 app.post('/api/trigger-training', (req, res) => {
-  if (isCurrentlyTraining) {
+  if (isCurrentlyTraining || isPracticing) {
     return res.json({
       success: false,
-      message: "Training already in progress",
-      progress: trainingProgress
+      message: isCurrentlyTraining ? "Training already in progress" : "Practice session in progress",
+      progress: isCurrentlyTraining ? trainingProgress : practiceProgress
     });
   }
   
@@ -250,6 +344,23 @@ app.post('/api/trigger-training', (req, res) => {
   res.json({
     success: true,
     message: "Training started successfully"
+  });
+});
+
+// New endpoint to manually trigger practice
+app.post('/api/trigger-practice', (req, res) => {
+  if (isCurrentlyTraining || isPracticing) {
+    return res.json({
+      success: false,
+      message: isCurrentlyTraining ? "Training in progress" : "Practice already in progress",
+      progress: isCurrentlyTraining ? trainingProgress : practiceProgress
+    });
+  }
+  
+  simulatePractice();
+  res.json({
+    success: true,
+    message: "Practice session started successfully"
   });
 });
 
@@ -263,6 +374,17 @@ app.get('/api/training-logs', (req, res) => {
   });
 });
 
+// New endpoint to get practice logs
+app.get('/api/practice-logs', (req, res) => {
+  res.json({
+    logs: practiceLog,
+    isPracticing: isPracticing,
+    progress: practiceProgress,
+    lastPracticeDate: lastPracticeDate ? lastPracticeDate.toISOString() : null,
+    practiceCount: practiceCount
+  });
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Earthquake prediction simulator running at http://localhost:${port}`);
@@ -270,8 +392,11 @@ app.listen(port, () => {
   // Run initial training check
   checkTrainingSchedule();
   
-  // Set up recurring checks (every hour)
+  // Set up recurring checks for training (every hour)
   setInterval(checkTrainingSchedule, 60 * 60 * 1000);
+  
+  // Set up recurring checks for practice (every 30 minutes)
+  setInterval(checkPracticeSchedule, 30 * 60 * 1000);
 });
 
 // Instructions for connecting your model
@@ -280,4 +405,6 @@ console.log('1. Create a Python Flask/FastAPI server that loads your model');
 console.log('2. Use the model to process EMAG2 data');
 console.log('3. Set up routes that match these API endpoints');
 console.log('4. Replace this simulator with your Python backend');
-console.log('\nAutomated weekly model training is now enabled');
+console.log('\nAutomated weekly model training is enabled');
+console.log('Automated practice sessions run every 3 hours');
+
