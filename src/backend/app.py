@@ -81,7 +81,7 @@ def fetch_emag_data():
         model_status["modelStatus"] = "analyzing"
         model_status["lastUpdate"] = datetime.now().isoformat()
 
-        url = "https://services.swpc.noaa.gov/json/goes/primary/mag-1-day.json"
+        url = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json"
         response = requests.get(url)
         response.raise_for_status()
         raw_data = response.json()
