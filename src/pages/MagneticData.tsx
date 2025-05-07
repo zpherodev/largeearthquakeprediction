@@ -1,11 +1,114 @@
 
 import { MagneticChart } from "@/components/dashboard/MagneticChart";
+import { SensorStatus } from "@/components/dashboard/SensorStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getMagneticData } from "@/services/api";
+import { SignalHigh, SignalMedium, SignalLow } from "lucide-react";
 
 const MagneticData = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState("24h");
+  const [signalCharacteristics, setSignalCharacteristics] = useState({
+    strength: { value: "Medium", percentage: 65, status: "normal" },
+    anomalyScore: { value: 0.37, percentage: 37, status: "normal" },
+    frequencyRange: { value: "0.1-10 Hz", description: "Standard ULF range" },
+    signalToNoise: { value: "14.2 dB", percentage: 71, status: "good" }
+  });
+
+  const { data: magneticData, isLoading, error } = useQuery({
+    queryKey: ['magneticData'],
+    queryFn: getMagneticData,
+    refetchInterval: 60000, // Refetch every 60 seconds
+  });
+
+  // Calculate signal characteristics based on live data
+  useEffect(() => {
+    if (magneticData?.data && Array.isArray(magneticData.data) && magneticData.data.length > 0) {
+      // Extract values for calculations
+      const values = magneticData.data
+        .map(item => parseFloat(item.value) || parseFloat(String(item.mfig)) || 0)
+        .filter(val => !isNaN(val));
+      
+      if (values.length === 0) return;
+      
+      // Calculate average and standard deviation
+      const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+      const squareDiffs = values.map(value => Math.pow(value - avg, 2));
+      const avgSquareDiff = squareDiffs.reduce((sum, diff) => sum + diff, 0) / squareDiffs.length;
+      const stdDev = Math.sqrt(avgSquareDiff);
+      
+      // Get the most recent value
+      const latestValue = values[values.length - 1];
+      
+      // Calculate signal characteristics
+      const strengthPercentage = Math.min(100, Math.max(0, latestValue / 150 * 100));
+      const strengthStatus = strengthPercentage > 75 ? "high" : strengthPercentage > 40 ? "medium" : "low";
+      const strengthValue = strengthStatus === "high" ? "High" : strengthStatus === "medium" ? "Medium" : "Low";
+      
+      const anomalyValue = Math.min(1, Math.max(0, Math.abs(latestValue - avg) / (stdDev * 3)));
+      const anomalyPercentage = anomalyValue * 100;
+      const anomalyStatus = anomalyPercentage > 70 ? "critical" : anomalyPercentage > 40 ? "warning" : "normal";
+      
+      const signalToNoiseValue = stdDev > 0 ? (avg / stdDev).toFixed(1) : "14.2";
+      const snrPercentage = Math.min(100, Math.max(0, parseFloat(signalToNoiseValue) * 5));
+      const snrStatus = snrPercentage > 70 ? "good" : snrPercentage > 40 ? "moderate" : "poor";
+      
+      setSignalCharacteristics({
+        strength: { 
+          value: strengthValue, 
+          percentage: strengthPercentage, 
+          status: strengthStatus 
+        },
+        anomalyScore: { 
+          value: anomalyValue.toFixed(2), 
+          percentage: anomalyPercentage, 
+          status: anomalyStatus 
+        },
+        frequencyRange: { 
+          value: "0.1-10 Hz", 
+          description: "Standard ULF range" 
+        },
+        signalToNoise: { 
+          value: `${signalToNoiseValue} dB`, 
+          percentage: snrPercentage, 
+          status: snrStatus 
+        }
+      });
+    }
+  }, [magneticData]);
+
+  // Helper function to get appropriate signal icon based on status
+  const getSignalIcon = (status: string) => {
+    switch(status) {
+      case "high":
+      case "critical":
+        return <SignalHigh className="h-5 w-5 text-red-500" />;
+      case "medium":
+      case "warning":
+      case "moderate":
+        return <SignalMedium className="h-5 w-5 text-amber-500" />;
+      default:
+        return <SignalLow className="h-5 w-5 text-green-500" />;
+    }
+  };
+  
+  // Helper function to get status text color
+  const getStatusTextColor = (status: string) => {
+    switch(status) {
+      case "high":
+      case "critical":
+      case "poor":
+        return "text-red-500";
+      case "medium":
+      case "warning":
+      case "moderate":
+        return "text-amber-500";
+      default:
+        return "text-green-500";
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4 lg:p-8">
@@ -69,65 +172,60 @@ const MagneticData = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h3 className="text-sm font-medium">Signal Strength</h3>
-                          <p className="text-2xl font-bold">Medium</p>
-                          <p className="text-xs text-muted-foreground">Within expected parameters</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-2xl font-bold">{signalCharacteristics.strength.value}</p>
+                            {getSignalIcon(signalCharacteristics.strength.status)}
+                          </div>
+                          <p className={`text-xs ${getStatusTextColor(signalCharacteristics.strength.status)}`}>
+                            {signalCharacteristics.strength.status === "high" 
+                              ? "Above normal parameters" 
+                              : signalCharacteristics.strength.status === "medium"
+                                ? "Within expected parameters"
+                                : "Below expected parameters"}
+                          </p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium">Anomaly Score</h3>
-                          <p className="text-2xl font-bold">0.37</p>
-                          <p className="text-xs text-muted-foreground">Below detection threshold</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-2xl font-bold">{signalCharacteristics.anomalyScore.value}</p>
+                            {getSignalIcon(signalCharacteristics.anomalyScore.status)}
+                          </div>
+                          <p className={`text-xs ${getStatusTextColor(signalCharacteristics.anomalyScore.status)}`}>
+                            {signalCharacteristics.anomalyScore.status === "critical"
+                              ? "Above detection threshold"
+                              : signalCharacteristics.anomalyScore.status === "warning"
+                                ? "Approaching threshold"
+                                : "Below detection threshold"}
+                          </p>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h3 className="text-sm font-medium">Frequency Range</h3>
-                          <p className="text-2xl font-bold">0.1-10 Hz</p>
-                          <p className="text-xs text-muted-foreground">Standard ULF range</p>
+                          <p className="text-2xl font-bold">{signalCharacteristics.frequencyRange.value}</p>
+                          <p className="text-xs text-muted-foreground">{signalCharacteristics.frequencyRange.description}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium">Signal-to-Noise</h3>
-                          <p className="text-2xl font-bold">14.2 dB</p>
-                          <p className="text-xs text-muted-foreground">Good quality reading</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-2xl font-bold">{signalCharacteristics.signalToNoise.value}</p>
+                            {getSignalIcon(signalCharacteristics.signalToNoise.status)}
+                          </div>
+                          <p className={`text-xs ${getStatusTextColor(signalCharacteristics.signalToNoise.status)}`}>
+                            {signalCharacteristics.signalToNoise.status === "good"
+                              ? "Good quality reading"
+                              : signalCharacteristics.signalToNoise.status === "moderate"
+                                ? "Moderate quality reading"
+                                : "Poor quality reading"}
+                          </p>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sensor Status</CardTitle>
-                    <CardDescription>Monitoring station information</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Station ID</span>
-                        <span className="text-sm font-medium">EMAG-1042</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Location</span>
-                        <span className="text-sm font-medium">37.7749° N, 122.4194° W</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Last Calibration</span>
-                        <span className="text-sm font-medium">2025-04-23</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Status</span>
-                        <span className="text-sm font-medium flex items-center">
-                          <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
-                          Online
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Data Quality</span>
-                        <span className="text-sm font-medium">High</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <SensorStatus />
               </div>
             </div>
           </TabsContent>
