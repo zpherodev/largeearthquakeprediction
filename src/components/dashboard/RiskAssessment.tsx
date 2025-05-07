@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { getRiskAssessment } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
-import { Info, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RiskAssessmentProps {
@@ -103,12 +103,14 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
             </ul>
           </div>
 
-          <Alert variant="default" className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <AlertDescription className="text-blue-800 dark:text-blue-300 text-xs">
-              This system monitors anomalies in Earth's magnetic field. While some studies suggest potential correlations between electromagnetic changes and seismic activity, current science does not support reliable earthquake prediction.
-            </AlertDescription>
-          </Alert>
+          {anomalyLevel > 60 && (
+            <Alert variant="destructive" className="bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-800">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-red-800 dark:text-red-300 text-xs">
+                Warning: High magnetic anomaly detected. Elevated risk of significant seismic activity in monitored regions.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </CardContent>
     </Card>
