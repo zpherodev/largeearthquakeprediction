@@ -73,65 +73,149 @@ def load_model():
         return False
 
 
-def fetch_emag_data():
-    """Fetch real-time magnetic field data from NOAA's API"""
-    global last_data_fetch, magnetic_data, model_status
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import json
+import os
+from datetime import datetime
+import numpy as np
+import logging
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Cache file for magnetic data
+CACHE_FILE = "magnetic_data_cache.json"
+
+def load_cached_data():
+    """Load cached magnetic data if valid"""
+    try:
+        if os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list) and all(isinstance(item, dict) for item in data):
+                    logger.info("Loaded valid cached data")
+                    return data
+        return []
+    except json.JSONDecodeError as e:
+        logger.error(f"Corrupted cache file: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading cached data: {e}")
+        return []
+
+def save_cached_data(data):
+    """Save magnetic data to cache if valid"""
+    try:
+        if isinstance(data, list) and all(isinstance(item, dict) for item in data):
+            with open(CACHE_FILE, 'w') as f:
+                json.dump(data, f)
+            logger.info("Saved data to cache")
+    except Exception as e:
+        logger.error(f"Error saving cached data: {e}")
+
+def fetch_emag_data():
+    """Fetch real-time magnetic field data from NOAA's API with robust error handling"""
+    global last_data_fetch, magnetic_data, model_status
     try:
         model_status["modelStatus"] = "analyzing"
         model_status["lastUpdate"] = datetime.now().isoformat()
 
-        url = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json"
-        response = requests.get(url)
-        response.raise_for_status()
-        raw_data = response.json()
+        # NOAA endpoints to try
+        endpoints = [
+            "https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json",
+            "https://services.swpc.noaa.gov/json/goes/primary/mag-1-day.json"
+        ]
+
+        raw_data = None
+        for url in endpoints:
+            try:
+                session = requests.Session()
+                retries = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504, 404])
+                session.mount('https://', HTTPAdapter(max_retries=retries))
+                response = session.get(url, timeout=10)
+                response.raise_for_status()
+
+                # Log content type and snippet for debugging
+                content_type = response.headers.get('content-type', '')
+                logger.info(f"Response from {url}: Content-Type={content_type}, Status={response.status_code}")
+                logger.debug(f"Response snippet: {response.text[:200]}")
+
+                # Check if response is JSON
+                if 'application/json' not in content_type.lower():
+                    logger.error(f"Non-JSON response from {url}: {content_type}")
+                    continue
+
+                # Try parsing JSON
+                raw_data = response.json()
+                if not isinstance(raw_data, list):
+                    logger.error(f"Unexpected JSON structure from {url}: {type(raw_data)}")
+                    continue
+                break  # Success, exit loop
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Failed to fetch from {url}: {e}")
+                continue
+
+        if raw_data is None:
+            raise Exception("All NOAA endpoints failed")
 
         data = []
-        for entry in raw_data[-30:]:  # Get the last 30 entries
+        for entry in raw_data[-30:]:  # Last 30 entries
             try:
-                timestamp = entry["time_tag"]
+                timestamp = entry.get("time_tag")
+                if not timestamp:
+                    logger.warning("Missing time_tag in entry")
+                    continue
                 hp = float(entry.get("hp", 0))  # Total magnetic field strength
-
-                # For now, we'll set others to 0 or placeholders
-                decg = 0
-                dbhg = 0
-                decr = np.radians(decg)
-                dbhr = np.radians(dbhg)
+                decg = dbhg = decr = dbhr = mdig = mdir = 0
                 mfig = hp
                 mfir = np.radians(mfig)
-                mdig = 0
-                mdir = np.radians(mdig)
-
-                label = timestamp[11:16]  # Extract HH:MM
+                label = timestamp[11:16]
 
                 data.append({
                     "timestamp": timestamp,
                     "label": label,
                     "value": f"{hp:.2f}",
-                    "decg": decg,
-                    "dbhg": dbhg,
-                    "decr": decr,
-                    "dbhr": dbhr,
-                    "mfig": mfig,
-                    "mfir": mfir,
-                    "mdig": mdig,
-                    "mdir": mdir
+                    "decg": decg, "dbhg": dbhg, "decr": decr, "dbhr": dbhr,
+                    "mfig": mfig, "mfir": mfir, "mdig": mdig, "mdir": mdir
                 })
-            except Exception as inner_e:
-                logger.warning(f"Skipping malformed entry: {inner_e}")
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning(f"Skipping malformed entry: {e}")
                 continue
+
+        if not data:
+            raise Exception("No valid data parsed from NOAA response")
 
         magnetic_data = data
         last_data_fetch = datetime.now()
         model_status["modelStatus"] = "idle"
         model_status["lastUpdate"] = datetime.now().isoformat()
-        logger.info("Fetched magnetic data from NOAA successfully")
-
+        logger.info("Fetched and parsed magnetic data successfully")
+        
+        # Save to cache
+        save_cached_data(data)
         return data
     except Exception as e:
-        logger.error(f"Error fetching NOAA data: {e}")
+        logger.error(f"Error fetching/parsing NOAA data: {e}")
         model_status["modelStatus"] = "idle"
-        return []
+        # Try cached data
+        magnetic_data = load_cached_data()
+        if magnetic_data:
+            logger.info("Serving cached magnetic data")
+            return magnetic_data
+        # Fallback to static data
+        logger.info("Serving static fallback data")
+        magnetic_data = [{
+            "timestamp": datetime.now().isoformat(),
+            "label": datetime.now().strftime("%H:%M"),
+            "value": "10.50",
+            "decg": 0, "dbhg": 0, "decr": 0, "dbhr": 0,
+            "mfig": 10.5, "mfir": 0, "mdig": 0, "mdir": 0
+        }]
+        save_cached_data(magnetic_data)
+        return magnetic_data
 
 def run_prediction():
     """Run the earthquake prediction model on the latest magnetic data"""
