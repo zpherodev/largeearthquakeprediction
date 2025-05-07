@@ -34,7 +34,7 @@ const Predictions = () => {
                       <div>
                         <h3 className="text-sm font-medium">Accuracy</h3>
                         <p className="text-2xl font-bold">76%</p>
-                        <p className="text-xs text-muted-foreground">For events > M4.0</p>
+                        <p className="text-xs text-muted-foreground">For events {'>'}M4.0</p>
                       </div>
                       <div>
                         <h3 className="text-sm font-medium">Precision</h3>
