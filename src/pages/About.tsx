@@ -1,4 +1,3 @@
-
 import { Info } from "lucide-react";
 
 const About = () => {
@@ -202,6 +201,12 @@ const About = () => {
             </p>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-gray-600 dark:text-gray-300">
+          For full documentation and data visit: <a href="https://github.com/crknftart/Large-Earthquake-Prediction-Model" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">https://github.com/crknftart/Large-Earthquake-Prediction-Model</a>
+        </p>
       </div>
     </div>
   );
