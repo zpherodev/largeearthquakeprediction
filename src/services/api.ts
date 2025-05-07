@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://preview--quak
  * @returns Promise with magnetic field readings
  */
 export async function getDashboardSummary() {
-  const res = await fetch('${API_BASE_URL}/api/dashboard-summary');
+  const res = await fetch('${API_BASE_URL}/dashboard-summary');
   if (!res.ok) throw new Error("Failed to fetch dashboard summary");
   return res.json();
 }
