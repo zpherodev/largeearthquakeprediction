@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { getModelStatus } from "@/services/api";
+import { Info } from "lucide-react";
 
 export function ModelStatus() {
   const { data: modelStatus, isLoading, error } = useQuery({
@@ -36,6 +37,9 @@ export function ModelStatus() {
   const lastUpdate = modelStatus?.lastUpdate ? new Date(modelStatus.lastUpdate) : new Date();
   const status = modelStatus?.modelStatus || "idle";
   const modelVersion = modelStatus?.modelVersion || "LEPAM v1.0.4";
+  const accuracy = modelStatus?.accuracy || 76;
+  const precision = modelStatus?.precision || 71;
+  const recall = modelStatus?.recall || 68;
 
   const getStatusColor = () => {
     switch (status) {
@@ -43,6 +47,8 @@ export function ModelStatus() {
       case "analyzing": return "bg-amber-600 text-white";
       case "predicting": return "bg-purple-600 text-white";
       case "idle": return "bg-gray-600 text-white";
+      case "error": return "bg-red-600 text-white";
+      default: return "bg-gray-600 text-white";
     }
   };
   
@@ -81,6 +87,34 @@ export function ModelStatus() {
             <Progress value={memoryUsage} className="h-2" />
           </div>
           
+          {/* Model accuracy metrics */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-1">
+              <Info className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">Model Performance</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <div className="text-xs">Accuracy</div>
+                <Progress value={accuracy} className="h-1.5" 
+                  indicatorClassName={accuracy >= 80 ? "bg-green-500" : accuracy >= 70 ? "bg-amber-500" : "bg-red-500"} />
+                <div className="text-[10px] text-right font-medium">{accuracy}%</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs">Precision</div>
+                <Progress value={precision} className="h-1.5" 
+                  indicatorClassName={precision >= 80 ? "bg-green-500" : precision >= 70 ? "bg-amber-500" : "bg-red-500"} />
+                <div className="text-[10px] text-right font-medium">{precision}%</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs">Recall</div>
+                <Progress value={recall} className="h-1.5" 
+                  indicatorClassName={recall >= 80 ? "bg-green-500" : recall >= 70 ? "bg-amber-500" : "bg-red-500"} />
+                <div className="text-[10px] text-right font-medium">{recall}%</div>
+              </div>
+            </div>
+          </div>
+
           <div className="pt-2 border-t border-border">
             <div className="text-xs text-muted-foreground">
               <p><span className="font-medium">Last Update:</span> {formatTime(lastUpdate)}</p>
