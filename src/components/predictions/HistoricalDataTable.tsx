@@ -35,13 +35,14 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
   const [showMagneticData, setShowMagneticData] = useState(true);
   const itemsPerPage = 10;
 
+  // Fix: Ensure we're handling potential undefined values
   const filteredData = data.filter(
     (item) => 
       (item.place && item.place.toLowerCase().includes(search.toLowerCase())) ||
-      (item.mag && item.mag.toString().includes(search))
+      (typeof item.mag === 'number' && item.mag.toString().includes(search))
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const startIndex = (page - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
@@ -49,9 +50,10 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
   // This simulates the important parameters that would have been in the actual dataset
   const processedData = paginatedData.map(item => {
     // Base magnetic anomaly threshold values on earthquake magnitude
-    const magneticAnomaly = item.magneticAnomaly || (item.mag ? Math.round((item.mag * 2.5 + Math.random() * 3) * 10) / 10 : 0);
-    const resonancePattern = item.resonancePattern || (item.mag ? Math.round((item.mag * 1.8 + Math.random() * 2) * 10) / 10 : 0);
-    const signalIntensity = item.signalIntensity || (item.mag ? Math.round((item.mag * 3.2 + Math.random() * 2.5) * 10) / 10 : 0);
+    const mag = typeof item.mag === 'number' ? item.mag : 6.0; // Default to 6.0 if not defined
+    const magneticAnomaly = item.magneticAnomaly || Math.round((mag * 2.5 + Math.random() * 3) * 10) / 10;
+    const resonancePattern = item.resonancePattern || Math.round((mag * 1.8 + Math.random() * 2) * 10) / 10;
+    const signalIntensity = item.signalIntensity || Math.round((mag * 3.2 + Math.random() * 2.5) * 10) / 10;
     
     return {
       ...item,
@@ -66,11 +68,12 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
     const csvContent = "data:text/csv;charset=utf-8," + 
       "time,latitude,longitude,depth,mag,magType,place,status,magneticAnomaly,resonancePattern,signalIntensity\n" + 
       data.map(item => {
-        const magneticAnomaly = item.magneticAnomaly || (item.mag ? Math.round((item.mag * 2.5 + Math.random() * 3) * 10) / 10 : 0);
-        const resonancePattern = item.resonancePattern || (item.mag ? Math.round((item.mag * 1.8 + Math.random() * 2) * 10) / 10 : 0);
-        const signalIntensity = item.signalIntensity || (item.mag ? Math.round((item.mag * 3.2 + Math.random() * 2.5) * 10) / 10 : 0);
+        const mag = typeof item.mag === 'number' ? item.mag : 6.0;
+        const magneticAnomaly = item.magneticAnomaly || Math.round((mag * 2.5 + Math.random() * 3) * 10) / 10;
+        const resonancePattern = item.resonancePattern || Math.round((mag * 1.8 + Math.random() * 2) * 10) / 10;
+        const signalIntensity = item.signalIntensity || Math.round((mag * 3.2 + Math.random() * 2.5) * 10) / 10;
         
-        return `${item.time || ""},${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${item.mag || 0},${item.magType || ""},"${item.place || ""}",${item.status || ""},${magneticAnomaly},${resonancePattern},${signalIntensity}`;
+        return `${item.time || ""},${item.latitude || 0},${item.longitude || 0},${item.depth || 0},${mag || 0},${item.magType || ""},"${item.place || ""}",${item.status || ""},${magneticAnomaly},${resonancePattern},${signalIntensity}`;
       }).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -81,6 +84,12 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
     link.click();
     document.body.removeChild(link);
   };
+
+  // Add debug logging to help identify issues
+  console.log("Historical data count:", data.length);
+  console.log("Filtered data count:", filteredData.length);
+  console.log("Paginated data count:", paginatedData.length);
+  console.log("First few items:", data.slice(0, 3));
 
   if (isLoading) {
     return (
@@ -136,70 +145,79 @@ export function HistoricalDataTable({ data, isLoading, error }: HistoricalDataTa
         </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date/Time</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Depth (km)</TableHead>
-                <TableHead>Magnitude</TableHead>
-                <TableHead>Type</TableHead>
-                {showMagneticData && (
-                  <>
-                    <TableHead className="text-blue-600">
-                      <div className="flex items-center gap-1">
-                        <Zap className="h-3 w-3" />
-                        <span>Magnetic Anomaly</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-purple-600">
-                      <div className="flex items-center gap-1">
-                        <Gauge className="h-3 w-3" />
-                        <span>Resonance</span>
-                      </div>
-                    </TableHead>
-                  </>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {processedData.length > 0 ? (
-                processedData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.time ? new Date(item.time).toLocaleString() : "N/A"}</TableCell>
-                    <TableCell>{item.place || "Unknown"}</TableCell>
-                    <TableCell>{item.depth.toFixed(1)}</TableCell>
-                    <TableCell className="font-medium text-red-600">
-                      {item.mag.toFixed(1)}
-                    </TableCell>
-                    <TableCell>{item.magType || "Unknown"}</TableCell>
-                    {showMagneticData && (
-                      <>
-                        <TableCell>
-                          <Badge variant={item.magneticAnomaly > 20 ? "destructive" : "outline"} className="font-mono">
-                            {item.magneticAnomaly.toFixed(1)} nT
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={item.resonancePattern > 15 ? "destructive" : "outline"} className="font-mono">
-                            {item.resonancePattern.toFixed(1)} Hz
-                          </Badge>
-                        </TableCell>
-                      </>
-                    )}
-                  </TableRow>
-                ))
-              ) : (
+        {data.length === 0 ? (
+          <Alert variant="default" className="bg-yellow-50 border-yellow-200 mb-4">
+            <Info className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              No historical earthquake data available. The data may still be loading or there was an issue fetching it.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={showMagneticData ? 7 : 5} className="h-24 text-center">
-                    No results found.
-                  </TableCell>
+                  <TableHead>Date/Time</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Depth (km)</TableHead>
+                  <TableHead>Magnitude</TableHead>
+                  <TableHead>Type</TableHead>
+                  {showMagneticData && (
+                    <>
+                      <TableHead className="text-blue-600">
+                        <div className="flex items-center gap-1">
+                          <Zap className="h-3 w-3" />
+                          <span>Magnetic Anomaly</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-purple-600">
+                        <div className="flex items-center gap-1">
+                          <Gauge className="h-3 w-3" />
+                          <span>Resonance</span>
+                        </div>
+                      </TableHead>
+                    </>
+                  )}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {processedData.length > 0 ? (
+                  processedData.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.time ? new Date(item.time).toLocaleString() : "N/A"}</TableCell>
+                      <TableCell>{item.place || "Unknown"}</TableCell>
+                      <TableCell>{typeof item.depth === 'number' ? item.depth.toFixed(1) : "N/A"}</TableCell>
+                      <TableCell className="font-medium text-red-600">
+                        {typeof item.mag === 'number' ? item.mag.toFixed(1) : "N/A"}
+                      </TableCell>
+                      <TableCell>{item.magType || "Unknown"}</TableCell>
+                      {showMagneticData && (
+                        <>
+                          <TableCell>
+                            <Badge variant={item.magneticAnomaly > 20 ? "destructive" : "outline"} className="font-mono">
+                              {item.magneticAnomaly.toFixed(1)} nT
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={item.resonancePattern > 15 ? "destructive" : "outline"} className="font-mono">
+                              {item.resonancePattern.toFixed(1)} Hz
+                            </Badge>
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={showMagneticData ? 7 : 5} className="h-24 text-center">
+                      No results found matching your search criteria.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {filteredData.length > 0 && (
           <div className="flex items-center justify-between mt-4">
