@@ -13,6 +13,7 @@ interface StatusCardProps {
   valueClassName?: string;
   trendClassName?: string;
   loading?: boolean;
+  pulseEffect?: boolean;
 }
 
 export function StatusCard({ 
@@ -24,10 +25,13 @@ export function StatusCard({
   className,
   valueClassName,
   trendClassName,
-  loading = false
+  loading = false,
+  pulseEffect = true
 }: StatusCardProps) {
   // Add animation effect when value changes
   useEffect(() => {
+    if (!pulseEffect) return;
+    
     const valueElement = document.getElementById(`status-value-${title.replace(/\s+/g, '-').toLowerCase()}`);
     if (valueElement) {
       valueElement.classList.add('animate-pulse');
@@ -36,7 +40,7 @@ export function StatusCard({
       }, 2000);
       return () => clearTimeout(timeout);
     }
-  }, [value, title]);
+  }, [value, title, pulseEffect]);
   
   // Choose trend icon
   const trendIcon = trend === "up" ? "↑" : trend === "down" ? "↓" : "→";
@@ -49,10 +53,21 @@ export function StatusCard({
              trend === "down" ? "text-red-500 bg-red-50 dark:bg-red-950/30" :
              "text-gray-500 bg-gray-50 dark:bg-gray-800/30";
     }
+    
     // For risk factors, up is bad (higher risk)
     return trend === "up" ? "text-red-500 bg-red-50 dark:bg-red-950/30" :
            trend === "down" ? "text-green-500 bg-green-50 dark:bg-green-950/30" :
            "text-gray-500 bg-gray-50 dark:bg-gray-800/30";
+  };
+  
+  // Determine value style based on content
+  const getValueStyle = () => {
+    if (typeof value === 'string') {
+      if (value.includes("High") || value.includes("Active")) return "text-red-500";
+      if (value.includes("Moderate")) return "text-amber-500";
+      if (value.includes("Low") || value.includes("Normal")) return "text-green-500";
+    }
+    return "";
   };
 
   return (
@@ -67,6 +82,7 @@ export function StatusCard({
           className={cn(
             "text-2xl font-bold transition-opacity duration-300", 
             loading && "opacity-50",
+            getValueStyle(),
             valueClassName
           )}
         >

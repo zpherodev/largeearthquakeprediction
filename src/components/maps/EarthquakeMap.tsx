@@ -3,18 +3,50 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, MapPin, AlertTriangle } from "lucide-react";
 
-// Using a placeholder for the map as we can't directly integrate mapping libraries
 export function EarthquakeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [activeRegion, setActiveRegion] = useState(0);
+  const [zoom, setZoom] = useState(1);
 
   const regions = [
-    { name: "San Andreas Fault", risk: "moderate", coordinates: "34.0522° N, 118.2437° W" },
-    { name: "Cascadia Subduction Zone", risk: "low", coordinates: "45.5051° N, 122.6750° W" },
-    { name: "New Madrid Fault Zone", risk: "minimal", coordinates: "36.5707° N, 89.1089° W" },
+    { 
+      name: "San Andreas Fault", 
+      risk: "high", 
+      coordinates: "34.0522° N, 118.2437° W",
+      anomalyLevel: 68,
+      lastActivity: "3 days ago"
+    },
+    { 
+      name: "Cascadia Subduction Zone", 
+      risk: "moderate", 
+      coordinates: "45.5051° N, 122.6750° W",
+      anomalyLevel: 42,
+      lastActivity: "2 weeks ago"
+    },
+    { 
+      name: "New Madrid Fault Zone", 
+      risk: "minimal", 
+      coordinates: "36.5707° N, 89.1089° W",
+      anomalyLevel: 12,
+      lastActivity: "8 months ago"
+    },
+    { 
+      name: "Aleutian Islands", 
+      risk: "low", 
+      coordinates: "58.3019° N, 174.3942° W",
+      anomalyLevel: 28,
+      lastActivity: "1 month ago"
+    },
+    { 
+      name: "Ring of Fire - Japan", 
+      risk: "moderate", 
+      coordinates: "36.2048° N, 138.2529° E",
+      anomalyLevel: 45,
+      lastActivity: "2 days ago"
+    },
   ];
 
   const nextRegion = () => {
@@ -25,12 +57,21 @@ export function EarthquakeMap() {
     setActiveRegion((prev) => (prev - 1 + regions.length) % regions.length);
   };
 
+  const zoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.5, 3));
+  };
+
+  const zoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.5, 0.5));
+  };
+
   useEffect(() => {
-    // This is where we would initialize a map library
-    // For now, we'll just simulate a map loading
-    setTimeout(() => {
+    // This simulates loading a map
+    const timer = setTimeout(() => {
       setMapLoaded(true);
     }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const getRiskBadge = (risk: string) => {
@@ -48,6 +89,48 @@ export function EarthquakeMap() {
     }
   };
 
+  // Generate map markers based on all regions
+  const renderMapMarkers = () => {
+    return regions.map((region, index) => {
+      const isActive = index === activeRegion;
+      // Calculate position (this is simplified - in a real app you'd convert lat/long to pixels)
+      const left = 20 + (index * 18) + '%';
+      const top = 30 + (Math.sin(index * 1.5) * 30) + '%';
+      
+      return (
+        <div 
+          key={index}
+          className={`absolute transition-all duration-300 ${isActive ? 'z-10' : 'z-0'}`} 
+          style={{ left, top }}
+        >
+          <div 
+            className={`
+              flex flex-col items-center 
+              ${isActive ? 'scale-125' : 'scale-100'} 
+              transition-all duration-300 cursor-pointer
+            `}
+            onClick={() => setActiveRegion(index)}
+          >
+            <MapPin 
+              className={`
+                ${isActive ? 'text-red-500' : 'text-gray-500'}
+                ${region.risk === 'high' ? 'animate-pulse' : ''}
+              `} 
+              size={isActive ? 32 : 24} 
+              strokeWidth={isActive ? 2.5 : 1.5}
+              fill={region.risk === 'high' ? 'rgba(255,0,0,0.2)' : 'transparent'}
+            />
+            {isActive && (
+              <div className="absolute -top-12 bg-background border border-border rounded-md p-2 shadow-lg whitespace-nowrap">
+                {region.name}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    });
+  };
+
   return (
     <Card className="col-span-2 h-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -56,16 +139,20 @@ export function EarthquakeMap() {
           <CardDescription>Geographic visualization of potential seismic events</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline">
+          <Button size="icon" variant="outline" onClick={zoomOut}>
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="outline">
+          <Button size="icon" variant="outline" onClick={zoomIn}>
             <ZoomIn className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0 h-[calc(100%-5rem)]">
-        <div ref={mapRef} className="bg-slate-100 dark:bg-slate-800 h-full w-full relative rounded-b-lg overflow-hidden">
+        <div 
+          ref={mapRef} 
+          className="bg-slate-100 dark:bg-slate-800 h-full w-full relative rounded-b-lg overflow-hidden"
+          style={{ transform: `scale(${zoom})` }}
+        >
           {!mapLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -74,15 +161,58 @@ export function EarthquakeMap() {
           
           {mapLoaded && (
             <>
-              <div className="h-full w-full flex items-center justify-center">
-                <div className="text-center p-4">
-                  <p className="text-sm text-muted-foreground mb-2">Map Placeholder</p>
-                  <p className="text-xs text-muted-foreground">
-                    In a real implementation, this would display a map with earthquake risk indicators 
-                    based on magnetic field readings and predictions from the model.
-                  </p>
-                </div>
+              <div className="absolute inset-0">
+                <svg
+                  viewBox="0 0 1000 500"
+                  className="w-full h-full"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                >
+                  {/* Simple world map outline */}
+                  <path
+                    d="M150,100 Q250,150 350,100 T550,100 T750,100 T950,100 V400 Q850,350 750,400 T550,400 T350,400 T150,400 Z"
+                    className="text-slate-400 dark:text-slate-600"
+                    fill="transparent"
+                  />
+                  {/* Fault Lines */}
+                  <path
+                    d="M250,150 Q300,200 350,150 T450,200"
+                    className="text-red-500"
+                    strokeDasharray="5,5"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M550,250 Q600,300 650,250"
+                    className="text-amber-500"
+                    strokeDasharray="5,5"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M750,200 Q800,250 850,200"
+                    className="text-blue-500"
+                    strokeDasharray="5,5"
+                    strokeWidth="2"
+                  />
+                </svg>
               </div>
+              
+              {/* Render the interactive map markers */}
+              <div className="absolute inset-0 transition-transform duration-300">
+                {renderMapMarkers()}
+              </div>
+              
+              {/* Alert indicators for high risk areas */}
+              {regions.some(r => r.risk === 'high') && (
+                <div className="absolute top-4 right-4">
+                  <div className="flex items-center gap-2 bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-xs animate-pulse">
+                    <AlertTriangle className="h-3 w-3 text-red-500" />
+                    <span className="text-red-500 font-medium">Active Alert</span>
+                  </div>
+                </div>
+              )}
               
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
@@ -91,9 +221,21 @@ export function EarthquakeMap() {
                   </Button>
                   <div className="text-center">
                     <h3 className="font-medium">{regions[activeRegion].name}</h3>
-                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
                       <span>{regions[activeRegion].coordinates}</span>
                       {getRiskBadge(regions[activeRegion].risk)}
+                    </div>
+                    <div className="mt-2 flex flex-col sm:flex-row gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Anomaly:</span>
+                        <span className={`font-medium ${regions[activeRegion].anomalyLevel > 50 ? 'text-red-500' : regions[activeRegion].anomalyLevel > 30 ? 'text-amber-500' : 'text-green-500'}`}>
+                          {regions[activeRegion].anomalyLevel}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Last Activity:</span>
+                        <span className="font-medium">{regions[activeRegion].lastActivity}</span>
+                      </div>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={nextRegion}>
