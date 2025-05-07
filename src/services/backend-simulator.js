@@ -1,4 +1,3 @@
-
 /**
  * This file provides a mock backend server for local development
  * To use it, you need to install Express:
@@ -15,6 +14,12 @@ const port = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Global training state
+let lastTrainingDate = null;
+let isCurrentlyTraining = false;
+let trainingProgress = 0;
+let trainingLog = [];
 
 // Generate simulated magnetic data
 function generateMagneticData() {
@@ -83,16 +88,30 @@ function generatePredictions() {
 
 // Generate simulated model status
 function generateModelStatus() {
-  return {
+  const baseStatus = {
     cpuUsage: Math.floor(Math.random() * 30) + 50,
     memoryUsage: Math.floor(Math.random() * 20) + 60,
     lastUpdate: new Date().toISOString(),
-    modelStatus: ["training", "analyzing", "predicting", "idle"][Math.floor(Math.random() * 4)],
+    modelStatus: isCurrentlyTraining ? "training" : ["analyzing", "predicting", "idle"][Math.floor(Math.random() * 3)],
     modelVersion: "LEPAM v1.0.4",
     accuracy: 76,
     precision: 71,
-    recall: 68
+    recall: 68,
+    lastTrainingDate: lastTrainingDate ? lastTrainingDate.toISOString() : null,
+    trainingScheduled: shouldTrainThisWeek()
   };
+  
+  // Add training info if currently training
+  if (isCurrentlyTraining) {
+    return {
+      ...baseStatus,
+      cpuUsage: Math.floor(Math.random() * 20) + 75, // Higher CPU during training
+      memoryUsage: Math.floor(Math.random() * 15) + 80, // Higher memory during training
+      trainingProgress
+    };
+  }
+  
+  return baseStatus;
 }
 
 // Generate simulated risk assessment
@@ -115,6 +134,75 @@ function generateRiskAssessment() {
   };
 }
 
+// Check if training should happen this week (once every 7 days)
+function shouldTrainThisWeek() {
+  if (!lastTrainingDate) return true;
+  
+  const now = new Date();
+  const daysSinceLastTraining = (now - lastTrainingDate) / (1000 * 60 * 60 * 24);
+  return daysSinceLastTraining >= 7;
+}
+
+// Run weekly training simulation
+function simulateTraining() {
+  if (isCurrentlyTraining) return;
+  
+  console.log("Starting weekly model training simulation...");
+  isCurrentlyTraining = true;
+  trainingProgress = 0;
+  
+  // Add initial log entry
+  trainingLog.push({
+    timestamp: new Date().toISOString(),
+    message: "Training started - Loading historical M6.0+ event data"
+  });
+  
+  // Simulate training progress over 2 minutes
+  const trainingInterval = setInterval(() => {
+    trainingProgress += 5;
+    
+    // Add log entries at specific points
+    if (trainingProgress === 20) {
+      trainingLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Feature extraction from magnetic field data complete"
+      });
+    } else if (trainingProgress === 50) {
+      trainingLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Random Forest model building in progress - optimizing hyperparameters"
+      });
+    } else if (trainingProgress === 80) {
+      trainingLog.push({
+        timestamp: new Date().toISOString(),
+        message: "Cross-validation complete - Accuracy improved by 1.2%"
+      });
+    }
+    
+    if (trainingProgress >= 100) {
+      clearInterval(trainingInterval);
+      trainingProgress = 100;
+      isCurrentlyTraining = false;
+      lastTrainingDate = new Date();
+      
+      trainingLog.push({
+        timestamp: lastTrainingDate.toISOString(),
+        message: "Training complete - Model updated successfully"
+      });
+      
+      console.log("Training simulation completed");
+    }
+  }, 1200); // Updates every 1.2 seconds for a total of ~24 seconds
+}
+
+// Check for weekly training schedule
+function checkTrainingSchedule() {
+  if (shouldTrainThisWeek() && !isCurrentlyTraining) {
+    console.log("Weekly training check - training needed");
+    simulateTraining();
+  }
+}
+
 // API Routes
 app.get('/api/magnetic-data', (req, res) => {
   res.json(generateMagneticData());
@@ -132,17 +220,6 @@ app.get('/api/risk-assessment', (req, res) => {
   res.json(generateRiskAssessment());
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Earthquake prediction simulator running at http://localhost:${port}`);
-});
-
-// Instructions for connecting your model
-console.log('\nTo connect your actual Random Forest model:');
-console.log('1. Create a Python Flask/FastAPI server that loads your model');
-console.log('2. Use the model to process EMAG2 data');
-console.log('3. Set up routes that match these API endpoints');
-console.log('4. Replace this simulator with your Python backend');
 app.get('/api/dashboard-summary', (req, res) => {
   const magnetic = generateMagneticData();
   const modelStatus = generateModelStatus();
@@ -159,3 +236,48 @@ app.get('/api/dashboard-summary', (req, res) => {
   });
 });
 
+// New endpoint to manually trigger training
+app.post('/api/trigger-training', (req, res) => {
+  if (isCurrentlyTraining) {
+    return res.json({
+      success: false,
+      message: "Training already in progress",
+      progress: trainingProgress
+    });
+  }
+  
+  simulateTraining();
+  res.json({
+    success: true,
+    message: "Training started successfully"
+  });
+});
+
+// New endpoint to get training logs
+app.get('/api/training-logs', (req, res) => {
+  res.json({
+    logs: trainingLog,
+    isTraining: isCurrentlyTraining,
+    progress: trainingProgress,
+    lastTrainingDate: lastTrainingDate ? lastTrainingDate.toISOString() : null
+  });
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Earthquake prediction simulator running at http://localhost:${port}`);
+  
+  // Run initial training check
+  checkTrainingSchedule();
+  
+  // Set up recurring checks (every hour)
+  setInterval(checkTrainingSchedule, 60 * 60 * 1000);
+});
+
+// Instructions for connecting your model
+console.log('\nTo connect your actual Random Forest model:');
+console.log('1. Create a Python Flask/FastAPI server that loads your model');
+console.log('2. Use the model to process EMAG2 data');
+console.log('3. Set up routes that match these API endpoints');
+console.log('4. Replace this simulator with your Python backend');
+console.log('\nAutomated weekly model training is now enabled');
