@@ -1,3 +1,4 @@
+
 import { PredictionTable } from "@/components/predictions/PredictionTable";
 import { HistoricalDataTable } from "@/components/predictions/HistoricalDataTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getPredictions, triggerPrediction, getModelStatus, fetchHistoricalData } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Info, BarChart, ArrowUpDown, LineChart, FileBarChart, Activity, Database, Gauge, Zap } from "lucide-react";
+import { RefreshCw, Info, BarChart, ArrowUpDown, LineChart, FileBarChart, Activity, Database, Gauge, Zap, Clock, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -105,6 +106,27 @@ const Predictions = () => {
       signalIntensity: Math.round((baseValue * 3.2 + depthFactor * 4) * 10) / 10
     };
   }) : [];
+
+  // Get training and practice info from model status
+  const trainingInfo = {
+    lastTrainingDate: modelStatus?.lastTrainingDate ? new Date(modelStatus.lastTrainingDate) : null,
+    trainingScheduled: modelStatus?.trainingScheduled || false,
+    isTraining: modelStatus?.modelStatus === 'training',
+    trainingProgress: modelStatus?.trainingProgress || 0,
+  };
+  
+  const practiceInfo = {
+    lastPracticeDate: modelStatus?.lastPracticeDate ? new Date(modelStatus.lastPracticeDate) : null,
+    isPracticing: modelStatus?.modelStatus === 'practicing',
+    practiceProgress: modelStatus?.practiceProgress || 0,
+    practiceCount: modelStatus?.practiceCount || 0
+  };
+
+  // Format date function for training/practice dates
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'Never';
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4 lg:p-8">
@@ -343,9 +365,31 @@ const Predictions = () => {
                   />
                   <StatusCard
                     title="Last Retraining"
-                    value="7 days ago"
-                    description="Updated with recent data"
+                    value={trainingInfo.lastTrainingDate ? formatDate(trainingInfo.lastTrainingDate) : "7 days ago"}
+                    description={trainingInfo.trainingScheduled ? "Scheduled for this week" : "Updated with recent data"}
                     icon={<RefreshCw className="h-4 w-4" />}
+                    trend={trainingInfo.isTraining ? "up" : undefined}
+                  />
+                  <StatusCard
+                    title="Practice Sessions"
+                    value={practiceInfo.practiceCount.toString() || "0"}
+                    description="Every 3 hours automatically"
+                    icon={<RotateCw className="h-4 w-4" />}
+                    showProgress={practiceInfo.isPracticing}
+                    progressValue={practiceInfo.practiceProgress}
+                  />
+                  <StatusCard
+                    title="Last Practice"
+                    value={practiceInfo.lastPracticeDate ? formatDate(practiceInfo.lastPracticeDate) : "N/A"}
+                    description="Continuous model improvement"
+                    icon={<Clock className="h-4 w-4" />}
+                    trend={practiceInfo.isPracticing ? "up" : undefined}
+                  />
+                  <StatusCard
+                    title="Model Version"
+                    value={modelStatus?.modelVersion || "LEPAM v1.0.4"}
+                    description={modelStatus?.lastUpdate ? `Updated ${new Date(modelStatus.lastUpdate).toLocaleDateString()}` : "Latest version"}
+                    icon={<Info className="h-4 w-4" />}
                   />
                   <StatusCard
                     title="CPU Usage"
@@ -368,10 +412,13 @@ const Predictions = () => {
                     progressColor="bg-purple-500"
                   />
                   <StatusCard
-                    title="Model Version"
-                    value={modelStatus?.modelVersion || "LEPAM v1.0.4"}
-                    description={modelStatus?.lastUpdate ? `Updated ${new Date(modelStatus.lastUpdate).toLocaleDateString()}` : "Latest version"}
-                    icon={<Info className="h-4 w-4" />}
+                    title="Automatic Training"
+                    value="Weekly"
+                    description="For optimal performance"
+                    icon={<RotateCw className="h-4 w-4" />}
+                    showProgress={trainingInfo.isTraining}
+                    progressValue={trainingInfo.trainingProgress}
+                    progressColor="bg-green-500"
                   />
                 </div>
               </CardContent>
