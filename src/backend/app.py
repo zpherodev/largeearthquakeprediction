@@ -74,72 +74,62 @@ def load_model():
 
 
 def fetch_emag_data():
-    """Fetch magnetic field data from EMAG2 dataset or similar source"""
+    """Fetch real-time magnetic field data from NOAA's API"""
     global last_data_fetch, magnetic_data, model_status
-    
+
     try:
-        # Set model status to analyzing during data fetch
         model_status["modelStatus"] = "analyzing"
         model_status["lastUpdate"] = datetime.now().isoformat()
-        
-        # TODO: Replace with actual EMAG2 data fetch
-        # This is a placeholder that generates synthetic data
-        # In a real implementation, you would:
-        # 1. Connect to EMAG2 API or download dataset
-        # 2. Process the raw data to get required features
-        # 3. Return formatted data
-        
-        now = datetime.now()
+
+        url = "https://services.swpc.noaa.gov/json/goes/primary/mag-1-day.json"
+        response = requests.get(url)
+        response.raise_for_status()
+        raw_data = response.json()
+
         data = []
-        value = 100
-        
-        for i in range(29, -1, -1):
-            random_change = (np.random.random() - 0.5) * 10
-            is_spike = np.random.random() < 0.05
-            spike_amount = (np.random.random() * 50 - 25) if is_spike else 0
-            
-            value = value + random_change + spike_amount
-            value = max(50, min(150, value))
-            
-            date = now - timedelta(minutes=i*5)
-            hour = date.hour
-            minute = date.minute
-            
-            # Create features required by the model
-            decg = np.random.random() * 360  # Declination in degrees
-            dbhg = np.random.random() * 100  # Horizontal field component
-            decr = np.radians(decg)  # Convert to radians
-            dbhr = np.radians(dbhg)  # Convert to radians
-            mfig = value  # Magnetic field intensity
-            mfir = np.radians(mfig)  # Convert to radians
-            mdig = np.random.random() * 90  # Magnetic declination inclination
-            mdir = np.radians(mdig)  # Convert to radians
-            
-            data.append({
-                "timestamp": date.isoformat(),
-                "label": f"{hour}:{minute:02d}",
-                "value": f"{value:.2f}",
-                "decg": decg,
-                "dbhg": dbhg,
-                "decr": decr,
-                "dbhr": dbhr,
-                "mfig": mfig,
-                "mfir": mfir,
-                "mdig": mdig,
-                "mdir": mdir
-            })
-        
+        for entry in raw_data[-30:]:  # Get the last 30 entries
+            try:
+                timestamp = entry["time_tag"]
+                hp = float(entry.get("hp", 0))  # Total magnetic field strength
+
+                # For now, we'll set others to 0 or placeholders
+                decg = 0
+                dbhg = 0
+                decr = np.radians(decg)
+                dbhr = np.radians(dbhg)
+                mfig = hp
+                mfir = np.radians(mfig)
+                mdig = 0
+                mdir = np.radians(mdig)
+
+                label = timestamp[11:16]  # Extract HH:MM
+
+                data.append({
+                    "timestamp": timestamp,
+                    "label": label,
+                    "value": f"{hp:.2f}",
+                    "decg": decg,
+                    "dbhg": dbhg,
+                    "decr": decr,
+                    "dbhr": dbhr,
+                    "mfig": mfig,
+                    "mfir": mfir,
+                    "mdig": mdig,
+                    "mdir": mdir
+                })
+            except Exception as inner_e:
+                logger.warning(f"Skipping malformed entry: {inner_e}")
+                continue
+
         magnetic_data = data
-        last_data_fetch = now
-        logger.info("Magnetic data fetched successfully")
-        
-        # Update model status to idle after data fetch
+        last_data_fetch = datetime.now()
         model_status["modelStatus"] = "idle"
         model_status["lastUpdate"] = datetime.now().isoformat()
-        
+        logger.info("Fetched magnetic data from NOAA successfully")
+
         return data
     except Exception as e:
-        logger.error(f"Error fetching EMAG data: {e}")
+        logger.error(f"Error fetching NOAA data: {e}")
         model_status["modelStatus"] = "idle"
         return []
 
