@@ -1,3 +1,4 @@
+
 import { Compass, BarChart, Activity, TrendingDown } from "lucide-react";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { MagneticChart } from "@/components/dashboard/MagneticChart";
@@ -5,7 +6,6 @@ import { RiskAssessment } from "@/components/dashboard/RiskAssessment";
 import { EarthquakeMap } from "@/components/maps/EarthquakeMap";
 import { ModelStatus } from "@/components/models/ModelStatus";
 import { SensorStatus } from "@/components/dashboard/SensorStatus";
-import { ForecastSummary } from "@/components/dashboard/ForecastSummary";
 import { AnomalyDetection } from "@/components/dashboard/AnomalyDetection";
 import { useQuery } from '@tanstack/react-query';
 import { getMagneticData, getModelStatus, getRiskAssessment, fetchNOAAMagneticData } from "@/services/api";
@@ -129,8 +129,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <ForecastSummary className="lg:col-span-2" />
-        <AnomalyDetection />
+        <AnomalyDetection className="lg:col-span-3" />
       </div>
     </div>
   );
