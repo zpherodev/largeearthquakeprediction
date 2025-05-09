@@ -12,39 +12,43 @@ import { useQuery } from '@tanstack/react-query';
 import { getMagneticData, getModelStatus, getRiskAssessment } from "@/services/api";
 
 const Dashboard = () => {
-  // Fetch magnetic data for the chart and EMAG readings
+  // Fetch magnetic data for the chart and EMAG readings - same query key as Map page
   const { data: magneticData, isLoading: magneticLoading } = useQuery({
     queryKey: ["magneticData"],
     queryFn: getMagneticData,
     refetchInterval: 30000,
   });
 
-  // Fetch model status for the status cards
+  // Fetch model status - same query key as Map page
   const { data: modelStatus, isLoading: modelLoading } = useQuery({
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 30000,
   });
 
-  // Fetch risk assessment data
+  // Fetch risk assessment data - same query key as Map page
   const { data: riskData, isLoading: riskLoading } = useQuery({
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
     refetchInterval: 30000,
   });
 
+  // Get latest reading value - same processing as Map page
   const latest = magneticData?.data?.[magneticData.data.length - 1];
   
-  // Determine signal intensity trend based on risk assessment
+  // Determine risk level directly from risk assessment data
+  const riskLevel = riskData?.riskLevel || 20;
+  
+  // Determine signal intensity trend based on risk assessment - consistent with Map
   const signalIntensity = riskData?.factors?.signalIntensity || "Medium";
   const signalTrend = signalIntensity === "High" ? "up" : 
                       signalIntensity === "Low" ? "down" : "stable";
   
-  // Determine anomaly detection status
-  const anomalyActive = riskData?.riskLevel > 30;
-  const regions = Math.floor(Math.random() * 5) + 3; // Simulate 3-8 regions being monitored
+  // Determine anomaly detection status based on risk level - consistent with Map
+  const anomalyActive = riskLevel > 30;
+  const regions = 3; // Use fixed high-risk areas count for consistency with Map
   
-  // Get prediction confidence from model data
+  // Get prediction confidence from model data - same as in Map
   const predictionConfidence = modelStatus?.accuracy || 76;
   const confidenceTrend = predictionConfidence > 80 ? "up" : 
                           predictionConfidence < 70 ? "down" : "stable";

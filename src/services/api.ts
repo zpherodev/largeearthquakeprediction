@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Update to point to the actual backend server
@@ -66,8 +65,7 @@ export async function fetchNOAAMagneticData() {
       throw new Error("Unexpected data format from NOAA");
     }
     
-    // Transform the data into the format our app expects
-    // Take last 30 data points (or fewer if less available)
+    // Transform the data into the format our app expects - consistently use 30 points
     const startIndex = Math.max(0, rawData.length - 30);
     const formattedData = rawData.slice(startIndex).map((entry: any) => {
       const timestamp = entry.time_tag || "";
@@ -93,6 +91,20 @@ export async function fetchNOAAMagneticData() {
   }
 }
 
+// Standardized fallback values for consistent display
+const FALLBACK = {
+  riskLevel: 25,
+  magneticReading: "98.5",
+  anomalyCount: 3,
+  monitoredRegions: 3,
+  trend: "stable",
+  factors: {
+    magneticAnomalies: "Moderate",
+    historicalPatterns: "Low Correlation",
+    signalIntensity: "Stable"
+  }
+};
+
 export async function getDashboardSummary() {
   try {
     return await fetchWithErrorHandling('/dashboard-summary');
@@ -100,10 +112,10 @@ export async function getDashboardSummary() {
     console.error("Error in getDashboardSummary:", error);
     // Provide consistent fallback data
     return {
-      riskLevel: 25,
-      magneticReading: "98.5",
-      anomalyCount: 3,
-      monitoredRegions: 8
+      riskLevel: FALLBACK.riskLevel,
+      magneticReading: FALLBACK.magneticReading,
+      anomalyCount: FALLBACK.anomalyCount,
+      monitoredRegions: FALLBACK.monitoredRegions
     };
   }
 }
@@ -154,9 +166,7 @@ export async function getModelStatus() {
       recall: 94 // For M6.0+ events
     };
     
-    // Log the fallback data for debugging
     console.log("Using fallback model status data:", fallbackData);
-    
     return fallbackData;
   }
 }
@@ -169,23 +179,13 @@ export async function getRiskAssessment() {
   } catch (error) {
     console.error("Error in getRiskAssessment:", error);
     // Generate consistent fallback data for risk assessment
-    const riskLevel = Math.floor(Math.random() * 15) + 25; // 25-40% - moderate risk
-    const magneticStatus = riskLevel > 35 ? "Moderate" : "Low";
-    const signalStatus = riskLevel > 35 ? "Stable" : "Low";
-    
     const fallbackData = {
-      riskLevel: riskLevel,
-      trend: riskLevel > 35 ? "stable" : "decreasing",
-      factors: {
-        magneticAnomalies: magneticStatus,
-        historicalPatterns: riskLevel > 30 ? "Medium Correlation" : "Low Correlation",
-        signalIntensity: signalStatus
-      }
+      riskLevel: FALLBACK.riskLevel,
+      trend: FALLBACK.trend,
+      factors: FALLBACK.factors
     };
     
-    // Log the fallback data for debugging
     console.log("Using fallback risk assessment data:", fallbackData);
-    
     return fallbackData;
   }
 }

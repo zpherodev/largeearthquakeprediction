@@ -9,41 +9,50 @@ import { useQuery } from '@tanstack/react-query';
 import { getRiskAssessment, getMagneticData, getModelStatus } from "@/services/api";
 
 const Map = () => {
-  // Fetch risk assessment data
+  // Fetch risk assessment data - same query key as Dashboard
   const { data: riskData, isLoading: riskLoading } = useQuery({
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
     refetchInterval: 30000,
   });
 
-  // Fetch magnetic data for consistency with dashboard
-  const { data: magneticData } = useQuery({
+  // Fetch magnetic data - same query key as Dashboard
+  const { data: magneticData, isLoading: magneticLoading } = useQuery({
     queryKey: ["magneticData"],
     queryFn: getMagneticData,
     refetchInterval: 30000,
   });
 
-  // Fetch model status for consistency with dashboard
-  const { data: modelStatus } = useQuery({
+  // Fetch model status - same query key as Dashboard
+  const { data: modelStatus, isLoading: modelLoading } = useQuery({
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 30000,
   });
 
-  // Determine risk level
+  // Determine risk level directly from riskData for consistency
   const riskLevel = riskData?.riskLevel || 20;
   const riskTrend = riskData?.trend || "stable";
 
-  // Scientifically verified high-risk areas (consistent with the map data)
-  // Using same data as EarthquakeMap component for consistency
+  // Get latest magnetic reading value
+  const latestMagneticValue = magneticData?.data?.[magneticData.data.length - 1]?.value;
+  
+  // Use consistent magnetic anomaly factors
+  const magneticFactors = riskData?.factors || {
+    magneticAnomalies: "Moderate",
+    historicalPatterns: "Low Correlation",
+    signalIntensity: "Stable"
+  };
+
+  // Scientifically verified high-risk areas (consistent with the EarthquakeMap component)
+  // Use risk level from API to determine anomaly levels
   const highRiskAreas = [
-    { name: "San Andreas Fault", risk: "high", anomaly: riskLevel > 40 ? 72 : 58 },
+    { name: "San Andreas Fault", risk: riskLevel > 40 ? "high" : "moderate", anomaly: riskLevel > 40 ? 72 : 58 },
     { name: "Ring of Fire - Japan (Kanto)", risk: riskLevel > 35 ? "high" : "moderate", anomaly: riskLevel > 35 ? 64 : 45 },
-    { name: "Cascadia Subduction Zone", risk: "moderate", anomaly: 48 }
+    { name: "Cascadia Subduction Zone", risk: "moderate", anomaly: Math.min(48, riskLevel) }
   ];
 
-  // Sensor statistics (consistent with SensorStatus component)
-  // This ensures the same data is shown in both places
+  // Sensor statistics from SensorStatus component to ensure consistency
   const sensorStats = {
     total: 50,
     online: 47,
@@ -90,11 +99,11 @@ const Map = () => {
           className="md:col-span-1"
         />
         <StatusCard 
-          title="Anomaly Detection" 
-          value={riskLevel > 40 ? "Active" : "Normal"} 
-          description="Current magnetic field status"
+          title="Current EMAG Reading" 
+          value={magneticLoading || !latestMagneticValue ? "Loading..." : `${latestMagneticValue} nT`}
+          description="Normal range (90-110 nT)"
           icon={<Activity className="h-4 w-4" />}
-          trend={riskTrend}
+          trend={latestMagneticValue && parseFloat(latestMagneticValue) > 100 ? "up" : "stable"}
           className="md:col-span-1"
         />
       </div>

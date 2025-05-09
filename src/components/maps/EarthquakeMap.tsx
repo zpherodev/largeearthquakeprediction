@@ -1,8 +1,11 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, MapPin, AlertTriangle } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { getRiskAssessment } from "@/services/api";
 
 export function EarthquakeMap() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -10,40 +13,51 @@ export function EarthquakeMap() {
   const [activeRegion, setActiveRegion] = useState(0);
   const [zoom, setZoom] = useState(1);
 
+  // Fetch risk assessment data for consistency
+  const { data: riskData } = useQuery({
+    queryKey: ["riskAssessment"],
+    queryFn: getRiskAssessment,
+    refetchInterval: 30000,
+  });
+  
+  // Get risk level from API data
+  const riskLevel = riskData?.riskLevel || 20;
+
+  // Updated regions to respond to riskLevel from API
   const regions = [
     { 
       name: "San Andreas Fault - Northern Section", 
-      risk: "high", 
+      risk: riskLevel > 40 ? "high" : "moderate", 
       coordinates: "37.7749° N, 122.4194° W",
-      anomalyLevel: 72,
+      anomalyLevel: riskLevel > 40 ? 72 : 58,
       lastActivity: "2 days ago"
     },
     { 
       name: "San Andreas Fault - Central Section", 
-      risk: "high", 
+      risk: riskLevel > 40 ? "high" : "moderate", 
       coordinates: "35.3733° N, 120.4522° W",
-      anomalyLevel: 68,
+      anomalyLevel: riskLevel > 40 ? 68 : 54,
       lastActivity: "3 days ago"
     },
     { 
       name: "San Andreas Fault - Southern Section", 
-      risk: "moderate", 
+      risk: riskLevel > 35 ? "moderate" : "low", 
       coordinates: "33.9416° N, 116.8111° W",
-      anomalyLevel: 58,
+      anomalyLevel: riskLevel > 35 ? 58 : 42,
       lastActivity: "5 days ago"
     },
     { 
       name: "Cascadia Subduction Zone - North", 
       risk: "moderate", 
       coordinates: "48.3895° N, 124.6351° W",
-      anomalyLevel: 48,
+      anomalyLevel: Math.min(48, riskLevel),
       lastActivity: "1 week ago"
     },
     { 
       name: "Cascadia Subduction Zone - South", 
       risk: "moderate", 
       coordinates: "42.8865° N, 124.5641° W",
-      anomalyLevel: 42,
+      anomalyLevel: Math.min(42, riskLevel),
       lastActivity: "2 weeks ago"
     },
     { 
@@ -69,9 +83,9 @@ export function EarthquakeMap() {
     },
     { 
       name: "Ring of Fire - Japan (Kanto)", 
-      risk: "high", 
+      risk: riskLevel > 35 ? "high" : "moderate", 
       coordinates: "35.6762° N, 139.6503° E",
-      anomalyLevel: 64,
+      anomalyLevel: riskLevel > 35 ? 64 : 45,
       lastActivity: "2 days ago"
     },
     { 
