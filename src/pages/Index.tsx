@@ -61,14 +61,28 @@ const Dashboard = () => {
   const confidenceTrend = predictionConfidence > 80 ? "up" : 
                           predictionConfidence < 70 ? "down" : "stable";
 
+  // Format the EMAG reading with unit and timestamp
+  const formatEMAGReading = () => {
+    if (noaaLoading || !latest) return "Loading...";
+    const value = parseFloat(latest.value);
+    return `${value.toFixed(1)} nT`;
+  };
+
+  // Get the timestamp for the latest reading
+  const getLatestTimestamp = () => {
+    if (!latest || !latest.timestamp) return "Latest reading";
+    const time = new Date(latest.timestamp);
+    return `${time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} UTC`;
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4 lg:p-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard 
           title="Current EMAG Reading" 
-          value={noaaLoading || !latest ? "Loading..." : `${latest.value} nT`}
-          description="NOAA GOES Magnetometer"
-          icon={<Compass />}
+          value={formatEMAGReading()}
+          description={`NOAA GOES Magnetometer | ${getLatestTimestamp()}`}
+          icon={<Compass className="text-blue-600" />}
           trend={latest && parseFloat(latest.value) > 100 ? "up" : "stable"}
         />
 
@@ -76,21 +90,21 @@ const Dashboard = () => {
           title="Signal Intensity" 
           value={signalIntensity} 
           description={`${signalTrend === "up" ? "↑" : signalTrend === "down" ? "↓" : "→"} from baseline`}
-          icon={<Activity />}
+          icon={<Activity className="text-amber-600" />}
           trend={signalTrend}
         />
         <StatusCard 
           title="Anomaly Detection" 
           value={anomalyActive ? "Active" : "Monitoring"} 
           description={`Monitoring ${regions} regions`}
-          icon={<BarChart />}
+          icon={<BarChart className="text-purple-600" />}
           trend="stable" 
         />
         <StatusCard 
           title="Prediction Confidence" 
           value={`${predictionConfidence}%`} 
           description="Based on current data"
-          icon={<TrendingDown />}
+          icon={<TrendingDown className="text-green-600" />}
           trend={confidenceTrend} 
         />
       </div>

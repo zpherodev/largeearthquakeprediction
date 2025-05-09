@@ -1,15 +1,26 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Map, Circle } from "lucide-react";
+import { AlertTriangle, Map, Circle, Clock, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getRiskAssessment } from "@/services/api";
+import { useEffect, useState } from "react";
 
 interface ForecastSummaryProps {
   className?: string;
 }
 
 export function ForecastSummary({ className }: ForecastSummaryProps) {
-  // In a real implementation, this would be derived from our prediction data
-  const forecastRegions = [
+  // Fetch the latest risk assessment data
+  const { data: riskData } = useQuery({
+    queryKey: ['riskAssessment'],
+    queryFn: getRiskAssessment,
+    refetchInterval: 60000, // Refetch every minute
+  });
+  
+  // Use dynamic data based on the risk assessment when available
+  const [forecastRegions, setForecastRegions] = useState([
     { 
       id: 1, 
       name: "San Andreas Fault", 
@@ -34,7 +45,29 @@ export function ForecastSummary({ className }: ForecastSummaryProps) {
       timeframe: "No immediate concern",
       activities: "Historical patterns show no risk indicators"
     }
-  ];
+  ]);
+
+  // Update forecast based on risk data
+  useEffect(() => {
+    if (riskData) {
+      const riskLevel = riskData.riskLevel || 0;
+      
+      // Dynamically adjust San Andreas risk based on current risk level
+      if (riskLevel > 50) {
+        setForecastRegions(prev => prev.map(region => 
+          region.id === 1 ? {...region, riskLevel: "high", probability: Math.min(75, 35 + riskLevel/2), timeframe: "24-72 hours"} : region
+        ));
+      } else if (riskLevel > 30) {
+        setForecastRegions(prev => prev.map(region => 
+          region.id === 1 ? {...region, riskLevel: "moderate", probability: Math.min(60, 25 + riskLevel/2)} : region
+        ));
+      } else {
+        setForecastRegions(prev => prev.map(region => 
+          region.id === 1 ? {...region, riskLevel: "low", probability: Math.min(30, 10 + riskLevel/2), timeframe: "7+ days"} : region
+        ));
+      }
+    }
+  }, [riskData]);
 
   const getRiskBadge = (risk: string) => {
     switch (risk) {
@@ -51,14 +84,42 @@ export function ForecastSummary({ className }: ForecastSummaryProps) {
     }
   };
 
+  const getLastUpdated = () => {
+    const now = new Date();
+    return `${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+  };
+
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-md">Forecast Summary</CardTitle>
-          <CardDescription>Regional earthquake risk assessment</CardDescription>
+          <CardDescription className="flex items-center gap-1">
+            Regional earthquake risk assessment
+            <span className="text-xs text-muted-foreground ml-1">
+              Updated: {getLastUpdated()}
+            </span>
+          </CardDescription>
         </div>
-        <Map className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8"
+            asChild
+          >
+            <a 
+              href="https://earthquake.usgs.gov/earthquakes/map/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1"
+            >
+              <Map className="h-3.5 w-3.5" />
+              <span className="text-xs">USGS Map</span>
+              <ExternalLink className="h-3 w-3 ml-0.5" />
+            </a>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -74,7 +135,7 @@ export function ForecastSummary({ className }: ForecastSummaryProps) {
                   <span>Probability: {region.probability}%</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Circle className="h-3 w-3" />
+                  <Clock className="h-3 w-3" />
                   <span>Timeframe: {region.timeframe}</span>
                 </div>
               </div>
