@@ -20,30 +20,31 @@ export function EarthquakeMap() {
     refetchInterval: 30000,
   });
   
-  // Get risk level from API data
+  // Get risk level from API data - consistent with dashboard
   const riskLevel = riskData?.riskLevel || 20;
 
   // Updated regions to respond to riskLevel from API
+  // Using more accurate threshold for high risk (60%+) to match dashboard
   const regions = [
     { 
       name: "San Andreas Fault - Northern Section", 
-      risk: riskLevel > 40 ? "high" : "moderate", 
+      risk: riskLevel > 60 ? "high" : "moderate", 
       coordinates: "37.7749° N, 122.4194° W",
-      anomalyLevel: riskLevel > 40 ? 72 : 58,
+      anomalyLevel: riskLevel > 60 ? 72 : 58,
       lastActivity: "2 days ago"
     },
     { 
       name: "San Andreas Fault - Central Section", 
-      risk: riskLevel > 40 ? "high" : "moderate", 
+      risk: riskLevel > 60 ? "high" : "moderate", 
       coordinates: "35.3733° N, 120.4522° W",
-      anomalyLevel: riskLevel > 40 ? 68 : 54,
+      anomalyLevel: riskLevel > 60 ? 68 : 54,
       lastActivity: "3 days ago"
     },
     { 
       name: "San Andreas Fault - Southern Section", 
-      risk: riskLevel > 35 ? "moderate" : "low", 
+      risk: riskLevel > 60 ? "moderate" : "low", 
       coordinates: "33.9416° N, 116.8111° W",
-      anomalyLevel: riskLevel > 35 ? 58 : 42,
+      anomalyLevel: riskLevel > 60 ? 58 : 42,
       lastActivity: "5 days ago"
     },
     { 
@@ -83,9 +84,9 @@ export function EarthquakeMap() {
     },
     { 
       name: "Ring of Fire - Japan (Kanto)", 
-      risk: riskLevel > 35 ? "high" : "moderate", 
+      risk: riskLevel > 60 ? "high" : "moderate", 
       coordinates: "35.6762° N, 139.6503° E",
-      anomalyLevel: riskLevel > 35 ? 64 : 45,
+      anomalyLevel: riskLevel > 60 ? 64 : 45,
       lastActivity: "2 days ago"
     },
     { 
@@ -139,13 +140,13 @@ export function EarthquakeMap() {
   const getRiskBadge = (risk: string) => {
     switch (risk) {
       case "high":
-        return <Badge className="bg-red-500">High Risk</Badge>;
+        return <Badge className="bg-red-500">Strong Signal</Badge>;
       case "moderate":
-        return <Badge className="bg-amber-500">Moderate Risk</Badge>;
+        return <Badge className="bg-amber-500">Moderate Signal</Badge>;
       case "low":
-        return <Badge className="bg-blue-500">Low Risk</Badge>;
+        return <Badge className="bg-blue-500">Low Signal</Badge>;
       case "minimal":
-        return <Badge className="bg-green-500">Minimal Risk</Badge>;
+        return <Badge className="bg-green-500">Minimal Signal</Badge>;
       default:
         return <Badge className="bg-slate-500">Unknown</Badge>;
     }
@@ -228,8 +229,8 @@ export function EarthquakeMap() {
     <Card className="col-span-2 h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Earthquake Risk Map</CardTitle>
-          <CardDescription>Geographic visualization of potential seismic events</CardDescription>
+          <CardTitle>Magnetic Signal Map</CardTitle>
+          <CardDescription>Geographic visualization of magnetic field patterns</CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={zoomOut}>
@@ -301,12 +302,12 @@ export function EarthquakeMap() {
                 {renderMapMarkers()}
               </div>
               
-              {/* Alert indicators for high risk areas */}
+              {/* Alert indicators for high signal areas */}
               {regions.some(r => r.risk === 'high') && (
                 <div className="absolute top-4 right-4">
                   <div className="flex items-center gap-2 bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-xs animate-pulse">
                     <AlertTriangle className="h-3 w-3 text-red-500" />
-                    <span className="text-red-500 font-medium">Active Alert</span>
+                    <span className="text-red-500 font-medium">Strong Signal</span>
                   </div>
                 </div>
               )}
@@ -324,7 +325,7 @@ export function EarthquakeMap() {
                     </div>
                     <div className="mt-2 flex flex-col sm:flex-row gap-4 text-xs">
                       <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Anomaly:</span>
+                        <span className="text-muted-foreground">Signal:</span>
                         <span className={`font-medium ${regions[activeRegion].anomalyLevel > 50 ? 'text-red-500' : regions[activeRegion].anomalyLevel > 30 ? 'text-amber-500' : 'text-green-500'}`}>
                           {regions[activeRegion].anomalyLevel}%
                         </span>

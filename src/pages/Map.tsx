@@ -1,4 +1,3 @@
-
 import { EarthquakeMap } from "@/components/maps/EarthquakeMap";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,25 +29,25 @@ const Map = () => {
     refetchInterval: 30000,
   });
 
-  // Determine risk level directly from riskData for consistency
+  // Determine risk level directly from riskData for consistency with dashboard
   const riskLevel = riskData?.riskLevel || 20;
   const riskTrend = riskData?.trend || "stable";
 
-  // Get latest magnetic reading value
+  // Get latest magnetic reading value - same format as dashboard
   const latestMagneticValue = magneticData?.data?.[magneticData.data.length - 1]?.value;
   
-  // Use consistent magnetic anomaly factors
+  // Use consistent magnetic anomaly factors from dashboard
   const magneticFactors = riskData?.factors || {
     magneticAnomalies: "Moderate",
     historicalPatterns: "Low Correlation",
     signalIntensity: "Stable"
   };
 
-  // Scientifically verified high-risk areas (consistent with the EarthquakeMap component)
-  // Use risk level from API to determine anomaly levels
+  // Keep risk assessments consistent with dashboard thresholds
+  // Moderate risk shouldn't be presented as high risk
   const highRiskAreas = [
-    { name: "San Andreas Fault", risk: riskLevel > 40 ? "high" : "moderate", anomaly: riskLevel > 40 ? 72 : 58 },
-    { name: "Ring of Fire - Japan (Kanto)", risk: riskLevel > 35 ? "high" : "moderate", anomaly: riskLevel > 35 ? 64 : 45 },
+    { name: "San Andreas Fault", risk: riskLevel > 60 ? "high" : "moderate", anomaly: riskLevel > 60 ? 72 : 58 },
+    { name: "Ring of Fire - Japan (Kanto)", risk: riskLevel > 60 ? "high" : "moderate", anomaly: riskLevel > 60 ? 64 : 45 },
     { name: "Cascadia Subduction Zone", risk: "moderate", anomaly: Math.min(48, riskLevel) }
   ];
 
@@ -67,12 +66,12 @@ const Map = () => {
         <div>
           <h1 className="text-2xl font-bold">Geographic Visualization</h1>
           <p className="text-muted-foreground">
-            Mapping earthquake risk areas based on magnetic field analysis
+            Mapping potential interest areas based on magnetic field analysis
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          {riskLevel > 40 && (
+          {riskLevel > 60 && (
             <div className="bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-sm animate-pulse flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               <span className="text-red-500 font-medium">High Risk Alert</span>
@@ -99,7 +98,7 @@ const Map = () => {
           className="md:col-span-1"
         />
         <StatusCard 
-          title="Current EMAG Reading" 
+          title="Current Global Field Strength" 
           value={magneticLoading || !latestMagneticValue ? "Loading..." : `${latestMagneticValue} nT`}
           description="Normal range (90-110 nT)"
           icon={<Activity className="h-4 w-4" />}
@@ -125,7 +124,7 @@ const Map = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">High Risk Areas</CardTitle>
+                    <CardTitle className="text-base">Monitored Areas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="text-sm space-y-2">
@@ -137,7 +136,7 @@ const Map = () => {
                               ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' 
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                           }`}>
-                            {area.risk === 'high' ? 'High Risk' : 'Moderate Risk'}
+                            {area.risk === 'high' ? 'High Interest' : 'Moderate Interest'}
                           </span>
                         </li>
                       ))}
@@ -169,14 +168,14 @@ const Map = () => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Current Alerts</CardTitle>
+                    <CardTitle className="text-base">Signal Intensity</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm space-y-2">
                       {highRiskAreas.map((area, index) => (
                         <div key={index} className="flex items-center">
                           <span className={`h-2 w-2 rounded-full ${area.risk === 'high' ? 'bg-red-500' : 'bg-amber-500'} mr-2`}></span>
-                          <span>{area.risk === 'high' ? 'High' : 'Moderate'} magnetic anomaly in {area.name} ({area.anomaly}%)</span>
+                          <span>{area.risk === 'high' ? 'Strong' : 'Moderate'} magnetic signal in {area.name} ({area.anomaly}%)</span>
                         </div>
                       ))}
                     </div>

@@ -33,22 +33,22 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
   };
   
   const getAnomalyText = () => {
-    if (anomalyLevel < 30) return "Low Anomaly";
-    if (anomalyLevel < 60) return "Moderate Anomaly";
-    return "Strong Anomaly";
+    if (anomalyLevel < 30) return "Low Signal";
+    if (anomalyLevel < 60) return "Moderate Signal";
+    return "Strong Signal";
   };
   
   const getTrendText = () => {
-    if (trend === "increasing") return "Anomaly level is increasing";
-    if (trend === "decreasing") return "Anomaly level is decreasing";
-    return "Anomaly level is stable";
+    if (trend === "increasing") return "Signal level is increasing";
+    if (trend === "decreasing") return "Signal level is decreasing";
+    return "Signal level is stable";
   };
 
   if (isLoading) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Magnetic Anomaly Assessment</CardTitle>
+          <CardTitle>Magnetic Signal Assessment</CardTitle>
           <CardDescription>Analyzing patterns in Earth's magnetic field</CardDescription>
         </CardHeader>
         <CardContent>
@@ -63,14 +63,14 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Magnetic Anomaly Assessment</CardTitle>
+        <CardTitle>Magnetic Signal Assessment</CardTitle>
         <CardDescription>Based on NOAA GOES Magnetometer data</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium">Current Anomaly Level</h4>
+              <h4 className="text-sm font-medium">Current Signal Level</h4>
               <span 
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
                   anomalyLevel < 30 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
@@ -89,7 +89,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
             <h4 className="text-sm font-medium">Observed Factors</h4>
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
-                <span>Magnetic Anomalies</span>
+                <span>Magnetic Signals</span>
                 <span className="text-xs font-medium">{factors.magneticAnomalies}</span>
               </li>
               <li className="flex items-center justify-between">
@@ -107,7 +107,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
             <Alert variant="destructive" className="bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-800">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-red-800 dark:text-red-300 text-xs">
-                Warning: High magnetic anomaly detected. Elevated risk of significant seismic activity in monitored regions.
+                Note: Strong magnetic signal detected. Continued monitoring recommended.
               </AlertDescription>
             </Alert>
           )}
