@@ -30,9 +30,9 @@ const Map = () => {
     refetchInterval: 30000,
   });
 
-  // Use signal level directly from model data for consistency
-  const signalLevel = riskData?.riskLevel || 20;
-  const signalTrend = riskData?.trend || "stable";
+  // Use variation level directly from model data for consistency
+  const variationLevel = riskData?.riskLevel || 20;
+  const variationTrend = riskData?.trend || "stable";
 
   // Get latest magnetic reading value
   const latestMagneticValue = magneticData?.data?.[magneticData.data.length - 1]?.value;
@@ -41,14 +41,14 @@ const Map = () => {
   const magneticFactors = riskData?.factors || {
     magneticAnomalies: "Moderate",
     historicalPatterns: "Low Correlation",
-    signalIntensity: "Stable"
+    fieldIntensity: "Stable"
   };
 
-  // Areas with monitoring stations - signals based on model data
+  // Areas with monitoring stations - variations based on model data
   const monitoredAreas = [
-    { name: "San Andreas Fault", signal: signalLevel > 60 ? "strong" : "moderate", reading: signalLevel > 60 ? Math.min(72, signalLevel) : Math.min(58, signalLevel) },
-    { name: "Ring of Fire - Japan (Kanto)", signal: signalLevel > 60 ? "strong" : "moderate", reading: signalLevel > 60 ? Math.min(64, signalLevel) : Math.min(45, signalLevel) },
-    { name: "Cascadia Subduction Zone", signal: "moderate", reading: Math.min(48, signalLevel) }
+    { name: "San Andreas Fault", variation: variationLevel > 60 ? "significant" : "notable", reading: variationLevel > 60 ? Math.min(72, variationLevel) : Math.min(58, variationLevel) },
+    { name: "Ring of Fire - Japan (Kanto)", variation: variationLevel > 60 ? "significant" : "notable", reading: variationLevel > 60 ? Math.min(64, variationLevel) : Math.min(45, variationLevel) },
+    { name: "Cascadia Subduction Zone", variation: "notable", reading: Math.min(48, variationLevel) }
   ];
 
   // Sensor statistics for consistency
@@ -71,10 +71,10 @@ const Map = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {signalLevel > 60 && (
+          {variationLevel > 60 && (
             <div className="bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-sm animate-pulse flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
-              <span className="text-red-500 font-medium">Model Alert: Strong Signal</span>
+              <span className="text-red-500 font-medium">Model Alert: Significant Variations</span>
             </div>
           )}
         </div>
@@ -82,11 +82,11 @@ const Map = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatusCard 
-          title="Current Signal Level" 
-          value={`${signalLevel}%`} 
+          title="Current Variation Level" 
+          value={`${variationLevel}%`} 
           description="Based on model's magnetic field analysis"
           icon={<AlertTriangle className="h-4 w-4" />}
-          trend={signalTrend}
+          trend={variationTrend}
           className="md:col-span-1"
         />
         <StatusCard 
@@ -110,7 +110,7 @@ const Map = () => {
       <div className="mt-6">
         <Tabs defaultValue="risk" className="w-full">
           <TabsList>
-            <TabsTrigger value="risk">Signal Map</TabsTrigger>
+            <TabsTrigger value="risk">Analysis Map</TabsTrigger>
             <TabsTrigger value="sensors">Sensor Network</TabsTrigger>
             <TabsTrigger value="historical">Historical Data</TabsTrigger>
           </TabsList>
@@ -132,11 +132,11 @@ const Map = () => {
                         <li key={index} className="flex items-center justify-between">
                           <span>{area.name}</span>
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            area.signal === 'strong' 
+                            area.variation === 'significant' 
                               ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' 
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                           }`}>
-                            {area.signal === 'strong' ? 'Strong Signal' : 'Moderate Signal'}
+                            {area.variation === 'significant' ? 'Significant Variations' : 'Notable Variations'}
                           </span>
                         </li>
                       ))}
@@ -168,14 +168,14 @@ const Map = () => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Model Signal Intensity</CardTitle>
+                    <CardTitle className="text-base">Model Variation Intensity</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm space-y-2">
                       {monitoredAreas.map((area, index) => (
                         <div key={index} className="flex items-center">
-                          <span className={`h-2 w-2 rounded-full ${area.signal === 'strong' ? 'bg-red-500' : 'bg-amber-500'} mr-2`}></span>
-                          <span>{area.signal === 'strong' ? 'Strong' : 'Moderate'} magnetic signal in {area.name} ({area.reading}%)</span>
+                          <span className={`h-2 w-2 rounded-full ${area.variation === 'significant' ? 'bg-red-500' : 'bg-amber-500'} mr-2`}></span>
+                          <span>{area.variation === 'significant' ? 'Significant' : 'Notable'} magnetic variations in {area.name} ({area.reading}%)</span>
                         </div>
                       ))}
                     </div>
@@ -350,9 +350,9 @@ const Map = () => {
                   </div>
                   
                   <div className="bg-background border rounded-lg p-4">
-                    <div className="text-sm font-medium mb-2">Signal Detection Rate</div>
+                    <div className="text-sm font-medium mb-2">Variation Detection Rate</div>
                     <p className="text-xs text-muted-foreground">
-                      The model's signal detection precision has improved from 82% to {modelStatus?.precision || 96}% over the past 6 months.
+                      The model's variation detection precision has improved from 82% to {modelStatus?.precision || 96}% over the past 6 months.
                     </p>
                   </div>
                 </div>

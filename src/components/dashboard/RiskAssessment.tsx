@@ -23,7 +23,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
   const factors = riskData?.factors || {
     magneticAnomalies: "Minimal",
     historicalPatterns: "Low Correlation",
-    signalIntensity: "Within Normal Range"
+    fieldIntensity: "Within Normal Range"
   };
   
   const getVariationColor = () => {
@@ -98,7 +98,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
               </li>
               <li className="flex items-center justify-between">
                 <span>Current Field Intensity</span>
-                <span className="text-xs font-medium">{factors.signalIntensity}</span>
+                <span className="text-xs font-medium">{factors.fieldIntensity}</span>
               </li>
             </ul>
           </div>

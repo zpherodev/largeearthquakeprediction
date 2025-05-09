@@ -20,93 +20,93 @@ export function EarthquakeMap() {
     refetchInterval: 30000,
   });
   
-  // Get signal level from API data
-  const signalLevel = riskData?.riskLevel || 20;
+  // Get variation level from API data
+  const variationLevel = riskData?.riskLevel || 20;
 
   // Regions with monitoring stations - showing model's data, not creating new assessments
   const regions = [
     { 
       name: "San Andreas Fault - Northern Section", 
-      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "significant" : variationLevel > 30 ? "notable" : "minimal", 
       coordinates: "37.7749° N, 122.4194° W",
-      signalReading: signalLevel > 60 ? Math.min(72, signalLevel) : Math.min(58, signalLevel),
+      variationReading: variationLevel > 60 ? Math.min(72, variationLevel) : Math.min(58, variationLevel),
       lastActivity: "2 days ago"
     },
     { 
       name: "San Andreas Fault - Central Section", 
-      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "significant" : variationLevel > 30 ? "notable" : "minimal", 
       coordinates: "35.3733° N, 120.4522° W",
-      signalReading: signalLevel > 60 ? Math.min(68, signalLevel) : Math.min(54, signalLevel),
+      variationReading: variationLevel > 60 ? Math.min(68, variationLevel) : Math.min(54, variationLevel),
       lastActivity: "3 days ago"
     },
     { 
       name: "San Andreas Fault - Southern Section", 
-      signal: signalLevel > 60 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "notable" : "minimal", 
       coordinates: "33.9416° N, 116.8111° W",
-      signalReading: signalLevel > 60 ? Math.min(58, signalLevel) : Math.min(42, signalLevel),
+      variationReading: variationLevel > 60 ? Math.min(58, variationLevel) : Math.min(42, variationLevel),
       lastActivity: "5 days ago"
     },
     { 
       name: "Cascadia Subduction Zone - North", 
-      signal: signalLevel > 60 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "notable" : "minimal", 
       coordinates: "48.3895° N, 124.6351° W",
-      signalReading: Math.min(48, signalLevel),
+      variationReading: Math.min(48, variationLevel),
       lastActivity: "1 week ago"
     },
     { 
       name: "Cascadia Subduction Zone - South", 
-      signal: signalLevel > 60 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "notable" : "minimal", 
       coordinates: "42.8865° N, 124.5641° W",
-      signalReading: Math.min(42, signalLevel),
+      variationReading: Math.min(42, variationLevel),
       lastActivity: "2 weeks ago"
     },
     { 
       name: "New Madrid Fault Zone", 
-      signal: "low", 
+      variation: "minimal", 
       coordinates: "36.5707° N, 89.1089° W",
-      signalReading: 12,
+      variationReading: 12,
       lastActivity: "8 months ago"
     },
     { 
       name: "Aleutian Islands - Western", 
-      signal: "low", 
+      variation: "minimal", 
       coordinates: "52.8222° N, 173.1686° W",
-      signalReading: 32,
+      variationReading: 32,
       lastActivity: "3 weeks ago"
     },
     { 
       name: "Aleutian Islands - Eastern", 
-      signal: "low", 
+      variation: "minimal", 
       coordinates: "56.8083° N, 157.3960° W",
-      signalReading: 28,
+      variationReading: 28,
       lastActivity: "1 month ago"
     },
     { 
       name: "Ring of Fire - Japan (Kanto)", 
-      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "significant" : variationLevel > 30 ? "notable" : "minimal", 
       coordinates: "35.6762° N, 139.6503° E",
-      signalReading: signalLevel > 60 ? Math.min(64, signalLevel) : Math.min(45, signalLevel),
+      variationReading: variationLevel > 60 ? Math.min(64, variationLevel) : Math.min(45, variationLevel),
       lastActivity: "2 days ago"
     },
     { 
       name: "Ring of Fire - Japan (Tohoku)", 
-      signal: signalLevel > 60 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "notable" : "minimal", 
       coordinates: "38.2682° N, 140.8694° E",
-      signalReading: Math.min(45, signalLevel),
+      variationReading: Math.min(45, variationLevel),
       lastActivity: "6 days ago"
     },
     { 
       name: "Ring of Fire - Japan (Kyushu)", 
-      signal: signalLevel > 60 ? "moderate" : "low", 
+      variation: variationLevel > 60 ? "notable" : "minimal", 
       coordinates: "33.5904° N, 130.4017° E",
-      signalReading: Math.min(40, signalLevel),
+      variationReading: Math.min(40, variationLevel),
       lastActivity: "1 week ago"
     },
     { 
       name: "Denali Fault System", 
-      signal: "low", 
+      variation: "minimal", 
       coordinates: "63.1148° N, 151.1926° W",
-      signalReading: 22,
+      variationReading: 22,
       lastActivity: "2 months ago"
     },
   ];
@@ -136,14 +136,14 @@ export function EarthquakeMap() {
     return () => clearTimeout(timer);
   }, []);
 
-  const getSignalBadge = (signal: string) => {
-    switch (signal) {
-      case "strong":
-        return <Badge className="bg-red-500">Strong Signal</Badge>;
-      case "moderate":
-        return <Badge className="bg-amber-500">Moderate Signal</Badge>;
-      case "low":
-        return <Badge className="bg-blue-500">Low Signal</Badge>;
+  const getVariationBadge = (variation: string) => {
+    switch (variation) {
+      case "significant":
+        return <Badge className="bg-red-500">Significant Variations</Badge>;
+      case "notable":
+        return <Badge className="bg-amber-500">Notable Variations</Badge>;
+      case "minimal":
+        return <Badge className="bg-blue-500">Minimal Variations</Badge>;
       default:
         return <Badge className="bg-slate-500">Unknown</Badge>;
     }
@@ -226,7 +226,7 @@ export function EarthquakeMap() {
     <Card className="col-span-2 h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Magnetic Signal Map</CardTitle>
+          <CardTitle>Magnetic Field Analysis Map</CardTitle>
           <CardDescription>Geographic visualization of magnetic field patterns</CardDescription>
         </div>
         <div className="flex items-center gap-2">
@@ -299,12 +299,12 @@ export function EarthquakeMap() {
                 {renderMapMarkers()}
               </div>
               
-              {/* Alert indicators for high signal areas - only show when model reports strong signal */}
-              {signalLevel > 60 && (
+              {/* Alert indicators for high variation areas - only show when model reports significant variations */}
+              {variationLevel > 60 && (
                 <div className="absolute top-4 right-4">
                   <div className="flex items-center gap-2 bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-xs animate-pulse">
                     <AlertTriangle className="h-3 w-3 text-red-500" />
-                    <span className="text-red-500 font-medium">Model Alert: Strong Signal</span>
+                    <span className="text-red-500 font-medium">Model Alert: Significant Variations</span>
                   </div>
                 </div>
               )}
@@ -318,13 +318,13 @@ export function EarthquakeMap() {
                     <h3 className="font-medium">{regions[activeRegion].name}</h3>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
                       <span>{regions[activeRegion].coordinates}</span>
-                      {getSignalBadge(regions[activeRegion].signal)}
+                      {getVariationBadge(regions[activeRegion].variation)}
                     </div>
                     <div className="mt-2 flex flex-col sm:flex-row gap-4 text-xs">
                       <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Signal:</span>
-                        <span className={`font-medium ${regions[activeRegion].signalReading > 50 ? 'text-red-500' : regions[activeRegion].signalReading > 30 ? 'text-amber-500' : 'text-green-500'}`}>
-                          {regions[activeRegion].signalReading}%
+                        <span className="text-muted-foreground">Field Variation:</span>
+                        <span className={`font-medium ${regions[activeRegion].variationReading > 50 ? 'text-red-500' : regions[activeRegion].variationReading > 30 ? 'text-amber-500' : 'text-green-500'}`}>
+                          {regions[activeRegion].variationReading}%
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
