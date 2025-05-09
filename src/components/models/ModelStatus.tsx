@@ -7,6 +7,7 @@ import { getModelStatus } from "@/services/api";
 import { Info, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link } from "react-router-dom";
 
 export function ModelStatus() {
   const { data: modelStatus, isLoading, error } = useQuery({
@@ -166,7 +167,9 @@ export function ModelStatus() {
             <Alert variant="default" className="bg-blue-50 border-blue-200 mt-2">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-xs text-blue-800">
-                Model performance metrics represent experimental results and should be validated with other prediction systems before making critical decisions.
+                <Link to="/predictions?tab=historical" className="text-blue-800 underline">
+                  View training data
+                </Link> to understand how this model was developed and evaluated.
               </AlertDescription>
             </Alert>
           )}
