@@ -36,14 +36,14 @@ export function ModelStatus() {
     );
   }
   
-  // Scientifically accurate values for M6.0+ events (validated data)
+  // Values for M6.0+ events
   const cpuUsage = modelStatus?.cpuUsage || 54;
   const memoryUsage = modelStatus?.memoryUsage || 62;
   const lastUpdate = modelStatus?.lastUpdate ? new Date(modelStatus.lastUpdate) : new Date();
   const status = modelStatus?.modelStatus || "idle";
   const modelVersion = modelStatus?.modelVersion || "LEPAM v1.0.4";
   
-  // Scientifically verified accuracy metrics for M6.0+ events based on historical testing
+  // Accuracy metrics for M6.0+ events
   const accuracy = modelStatus?.accuracy || 98.2; 
   const precision = modelStatus?.precision || 96.4; 
   const recall = modelStatus?.recall || 94.8;
@@ -111,7 +111,7 @@ export function ModelStatus() {
                     <div className="text-[10px] text-right font-medium">{accuracy}%</div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs max-w-xs">Scientifically verified accuracy through cross-validation with historical data of M6.0+ events.</p>
+                    <p className="text-xs max-w-xs">Model accuracy for predicting M6.0+ events.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -166,7 +166,7 @@ export function ModelStatus() {
             <Alert variant="default" className="bg-blue-50 border-blue-200 mt-2">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-xs text-blue-800">
-                All metrics have been peer-reviewed and validated by the International Seismological Research Consortium. Model performance statistics are based on historical testing with M6.0+ events from 2000-2022.
+                Model performance metrics represent experimental results and should be validated with other prediction systems before making critical decisions.
               </AlertDescription>
             </Alert>
           )}
