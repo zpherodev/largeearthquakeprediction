@@ -9,46 +9,54 @@ import { SensorStatus } from "@/components/dashboard/SensorStatus";
 import { ForecastSummary } from "@/components/dashboard/ForecastSummary";
 import { AnomalyDetection } from "@/components/dashboard/AnomalyDetection";
 import { useQuery } from '@tanstack/react-query';
-import { getMagneticData, getModelStatus, getRiskAssessment } from "@/services/api";
+import { getMagneticData, getModelStatus, getRiskAssessment, fetchNOAAMagneticData } from "@/services/api";
+import { toast } from "sonner";
 
 const Dashboard = () => {
-  // Fetch magnetic data for the chart and EMAG readings - same query key as Map page
-  const { data: magneticData, isLoading: magneticLoading } = useQuery({
-    queryKey: ["magneticData"],
-    queryFn: getMagneticData,
-    refetchInterval: 30000,
+  // Direct fetch from NOAA API for the most up-to-date data
+  const { data: noaaData, isLoading: noaaLoading, error: noaaError } = useQuery({
+    queryKey: ["noaaMagneticData"],
+    queryFn: fetchNOAAMagneticData,
+    refetchInterval: 60000, // Refresh every minute
+    retry: 3,
   });
 
-  // Fetch model status - same query key as Map page
+  // Fetch model status
   const { data: modelStatus, isLoading: modelLoading } = useQuery({
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
-    refetchInterval: 30000,
+    refetchInterval: 60000,
   });
 
-  // Fetch risk assessment data - same query key as Map page
+  // Fetch risk assessment data
   const { data: riskData, isLoading: riskLoading } = useQuery({
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
-    refetchInterval: 30000,
+    refetchInterval: 60000,
   });
 
-  // Get latest reading value - same processing as Map page
-  const latest = magneticData?.data?.[magneticData.data.length - 1];
+  // Show toast notification if there's an error with NOAA data
+  if (noaaError) {
+    console.error("Failed to fetch NOAA data:", noaaError);
+    toast.error("Unable to connect to NOAA data service. Some information may not be current.");
+  }
+
+  // Get latest reading value directly from NOAA data
+  const latest = noaaData?.data?.[noaaData.data.length - 1];
   
-  // Determine risk level directly from risk assessment data
+  // Determine risk level from risk assessment data
   const riskLevel = riskData?.riskLevel || 20;
   
-  // Determine signal intensity trend based on risk assessment - consistent with Map
+  // Signal intensity based on current magnetic readings
   const signalIntensity = riskData?.factors?.signalIntensity || "Medium";
   const signalTrend = signalIntensity === "High" ? "up" : 
                       signalIntensity === "Low" ? "down" : "stable";
   
-  // Determine anomaly detection status based on risk level - consistent with Map
+  // Determine anomaly detection status based on risk level
   const anomalyActive = riskLevel > 30;
-  const regions = 3; // Use fixed high-risk areas count for consistency with Map
+  const regions = riskData?.monitoredRegions || 3;
   
-  // Get prediction confidence from model data - same as in Map
+  // Get prediction confidence from model data
   const predictionConfidence = modelStatus?.accuracy || 76;
   const confidenceTrend = predictionConfidence > 80 ? "up" : 
                           predictionConfidence < 70 ? "down" : "stable";
@@ -58,8 +66,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard 
           title="Current EMAG Reading" 
-          value={magneticLoading || !latest ? "Loading..." : `${latest.value} nT`}
-          description="Normal range (90-110 nT)"
+          value={noaaLoading || !latest ? "Loading..." : `${latest.value} nT`}
+          description="NOAA GOES Magnetometer"
           icon={<Compass />}
           trend={latest && parseFloat(latest.value) > 100 ? "up" : "stable"}
         />
@@ -91,7 +99,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <MagneticChart 
             title="Magnetic Field Readings" 
-            description="Live EMAG data updates every 30 seconds" 
+            description="Live NOAA GOES Magnetometer data" 
           />
         </div>
         <RiskAssessment />

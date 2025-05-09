@@ -1,11 +1,10 @@
-
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { getMagneticData } from "@/services/api";
+import { fetchNOAAMagneticData } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, SignalHigh, SignalMedium, SignalLow } from "lucide-react";
+import { RefreshCcw, SignalHigh, SignalMedium, SignalLow, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 const COLORS = {
@@ -21,22 +20,22 @@ interface MagneticChartProps {
 
 export function MagneticChart({ title, description }: MagneticChartProps) {
   const { data: magneticData, isLoading, error, refetch } = useQuery({
-    queryKey: ['magneticData'],
-    queryFn: getMagneticData,
-    refetchInterval: 60000, // Refetch every 60 seconds
+    queryKey: ['noaaMagneticData'],
+    queryFn: fetchNOAAMagneticData,
+    refetchInterval: 60000, // Refetch every minute
     retry: 3,
     staleTime: 30000,
   });
 
   const handleRefresh = async () => {
-    toast.info("Refreshing magnetic data...");
+    toast.info("Refreshing NOAA magnetic data...");
     await refetch();
   };
 
   // Log the data we received for debugging
   useEffect(() => {
     if (magneticData) {
-      console.log("MagneticChart data:", magneticData);
+      console.log("MagneticChart data from NOAA:", magneticData);
     }
     if (error) {
       console.error("MagneticChart error:", error);
@@ -128,7 +127,7 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center flex-col gap-4">
-            <div className="text-red-500">Error loading magnetic data</div>
+            <div className="text-red-500">Error loading NOAA magnetic data</div>
             <Button onClick={handleRefresh} variant="default">
               <RefreshCcw className="h-4 w-4 mr-2" />
               Try Again
@@ -173,7 +172,18 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription className="flex items-center gap-1">
+            {description}
+            <a 
+              href="https://www.swpc.noaa.gov/products/goes-magnetometer" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              <span className="text-xs">Source</span>
+            </a>
+          </CardDescription>
         </div>
         <Button variant="outline" size="sm" onClick={handleRefresh}>
           <RefreshCcw className="h-4 w-4 mr-2" />
@@ -221,7 +231,10 @@ export function MagneticChart({ title, description }: MagneticChartProps) {
         
         {/* Signal Characteristics Section */}
         <div className="mt-6 space-y-4">
-          <h3 className="text-sm font-medium">Signal Characteristics</h3>
+          <h3 className="text-sm font-medium flex items-center justify-between">
+            <span>Signal Characteristics</span>
+            <span className="text-xs text-muted-foreground">Data from NOAA GOES Magnetometer</span>
+          </h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col space-y-1">
               <div className="flex items-center justify-between">

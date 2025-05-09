@@ -1,8 +1,13 @@
+
 import { toast } from "sonner";
 
 // Update to point to the actual backend server
 // We'll use a conditional to support both development and production environments
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+// NOAA Services endpoints - real data sources
+const NOAA_MAGNETOMETER_ENDPOINT = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json";
+const USGS_REAL_TIME_DATA = "https://geomag.usgs.gov/ws/data/";
 
 // Helper function for API requests with proper error handling
 async function fetchWithErrorHandling(endpoint: string, options = {}) {
@@ -45,12 +50,12 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
   }
 }
 
-// Function to directly fetch from NOAA API - Using a consistent URL across the application
+// Function to directly fetch from NOAA API - Primary source for real-time data
 export async function fetchNOAAMagneticData() {
   try {
-    console.log("Directly fetching from NOAA API");
-    // Using the correct NOAA API endpoint
-    const response = await fetch("https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json");
+    console.log("Directly fetching from NOAA Space Weather Prediction Center API");
+    // Using the correct NOAA API endpoint - real data source
+    const response = await fetch(NOAA_MAGNETOMETER_ENDPOINT);
     
     if (!response.ok) {
       throw new Error(`NOAA API Error: ${response.status}`);
@@ -58,7 +63,7 @@ export async function fetchNOAAMagneticData() {
     
     // Parse the JSON data
     const rawData = await response.json();
-    console.log("NOAA Raw Data:", rawData);
+    console.log("NOAA Raw Data sample:", rawData.slice(0, 2));
     
     if (!Array.isArray(rawData)) {
       console.error("Unexpected data format from NOAA:", rawData);
@@ -81,11 +86,11 @@ export async function fetchNOAAMagneticData() {
       };
     });
     
-    console.log("Formatted NOAA Data:", formattedData);
+    console.log("Formatted NOAA Data sample:", formattedData.slice(0, 2));
     return { data: formattedData };
   } catch (error) {
     console.error("Direct NOAA fetch error:", error);
-    toast.error(`Failed to fetch magnetic data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    toast.error(`Failed to fetch magnetic data from NOAA: ${error instanceof Error ? error.message : 'Unknown error'}`);
     // Return empty data array to prevent UI errors
     return { data: [] };
   }
@@ -122,8 +127,8 @@ export async function getDashboardSummary() {
 
 export async function getMagneticData() {
   try {
-    // Try direct NOAA API first for reliable data
-    console.log("Trying direct NOAA fetch first for reliability");
+    // Always try direct NOAA API first for real data
+    console.log("Fetching real-time data from NOAA SWPC");
     return await fetchNOAAMagneticData();
   } catch (error) {
     console.error("NOAA API fetch failed, falling back to backend:", error);
@@ -182,7 +187,8 @@ export async function getRiskAssessment() {
     const fallbackData = {
       riskLevel: FALLBACK.riskLevel,
       trend: FALLBACK.trend,
-      factors: FALLBACK.factors
+      factors: FALLBACK.factors,
+      monitoredRegions: FALLBACK.monitoredRegions
     };
     
     console.log("Using fallback risk assessment data:", fallbackData);

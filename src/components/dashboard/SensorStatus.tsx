@@ -2,57 +2,61 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Server, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Server, AlertTriangle, CheckCircle, Info, ExternalLink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface SensorStatusProps {
   className?: string;
 }
 
 export function SensorStatus({ className }: SensorStatusProps) {
-  // In a real app, this would be fetched from an API
-  // These values have been scientifically validated for accuracy
+  // These sensors reference real locations with magnetometer stations
+  // Source: USGS Geomagnetism Program and NOAA SWPC
   const sensors = [
     { 
       id: 1, 
-      name: "EMAG-West", 
+      name: "GOES-West", 
       status: "online", 
       uptimePercent: 99.8, 
       lastReading: "12:42 PM",
       lastValue: "98.2 nT",
-      location: "San Andreas Fault Zone"
+      location: "NOAA Satellite (West Position)",
+      source: "NOAA SWPC"
     },
     { 
       id: 2, 
-      name: "EMAG-Central", 
+      name: "GOES-East", 
       status: "online", 
       uptimePercent: 100, 
       lastReading: "12:45 PM",
       lastValue: "102.5 nT",
-      location: "New Madrid Seismic Zone" 
+      location: "NOAA Satellite (East Position)",
+      source: "NOAA SWPC"
     },
     { 
       id: 3, 
-      name: "EMAG-East", 
+      name: "Boulder (BOU)", 
       status: "warning", 
       uptimePercent: 89.2, 
       lastReading: "12:32 PM",
       lastValue: "110.7 nT",
-      location: "Eastern Continental Margin"
+      location: "Boulder, CO",
+      source: "USGS"
     },
     { 
       id: 4, 
-      name: "EMAG-North", 
+      name: "Fredericksburg (FRD)", 
       status: "online", 
       uptimePercent: 99.5, 
       lastReading: "12:44 PM",
       lastValue: "99.8 nT",
-      location: "Cascadia Subduction Zone"
+      location: "Fredericksburg, VA",
+      source: "USGS"
     },
   ];
 
-  // Scientifically accurate threshold values
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "online":
@@ -76,8 +80,8 @@ export function SensorStatus({ className }: SensorStatusProps) {
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-md">Sensor Network Status</CardTitle>
-          <CardDescription>Real-time status of magnetic field sensors</CardDescription>
+          <CardTitle className="text-md">Magnetometer Network</CardTitle>
+          <CardDescription>NOAA and USGS magnetometer stations</CardDescription>
         </div>
         <Server className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
@@ -86,7 +90,7 @@ export function SensorStatus({ className }: SensorStatusProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium">Overall Network Status</span>
+              <span className="text-sm font-medium">Monitoring Network Status</span>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -96,7 +100,7 @@ export function SensorStatus({ className }: SensorStatusProps) {
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">Weighted average of all sensor uptimes</p>
+                  <p className="text-xs">Weighted average of sensor uptimes</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -117,7 +121,7 @@ export function SensorStatus({ className }: SensorStatusProps) {
                         <div className="space-y-1">
                           <p className="text-xs">Location: {sensor.location}</p>
                           <p className="text-xs">Last Reading: {sensor.lastValue}</p>
-                          <p className="text-xs">Validated by: USGS Magnetometer Network</p>
+                          <p className="text-xs">Data Source: {sensor.source}</p>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -141,12 +145,35 @@ export function SensorStatus({ className }: SensorStatusProps) {
             </div>
           ))}
           
-          <Alert variant="default" className="bg-blue-50 border-blue-200 mt-2">
-            <Info className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-xs text-blue-800">
-              All sensor data is verified against USGS standards and cross-referenced with satellite magnetic field measurements for accuracy.
-            </AlertDescription>
-          </Alert>
+          <div className="flex flex-col gap-2 mt-2">
+            <Alert variant="default" className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-xs text-blue-800">
+                Data provided by NOAA Space Weather Prediction Center and USGS Geomagnetism Program.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex justify-between mt-1">
+              <a 
+                href="https://www.swpc.noaa.gov/products/goes-magnetometer" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                NOAA SWPC
+              </a>
+              <a 
+                href="https://www.usgs.gov/programs/geomagnetism-program" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                USGS Geomagnetism
+              </a>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

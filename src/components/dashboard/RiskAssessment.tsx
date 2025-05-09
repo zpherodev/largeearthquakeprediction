@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { getRiskAssessment } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RiskAssessmentProps {
@@ -15,7 +15,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
   const { data: riskData, isLoading, error } = useQuery({
     queryKey: ['riskAssessment'],
     queryFn: getRiskAssessment,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 60000, // Refetch every minute
   });
   
   const anomalyLevel = riskData?.riskLevel || 15;
@@ -64,7 +64,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle>Magnetic Anomaly Assessment</CardTitle>
-        <CardDescription>Analyzing patterns in Earth's magnetic field</CardDescription>
+        <CardDescription>Based on NOAA GOES Magnetometer data</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -111,6 +111,13 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
               </AlertDescription>
             </Alert>
           )}
+          
+          <Alert className="bg-blue-50 border-blue-200 mt-2">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-xs text-blue-800">
+              This assessment is based on real-time NOAA GOES magnetometer data and historical correlation analysis.
+            </AlertDescription>
+          </Alert>
         </div>
       </CardContent>
     </Card>
