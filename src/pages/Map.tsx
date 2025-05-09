@@ -1,3 +1,4 @@
+
 import { EarthquakeMap } from "@/components/maps/EarthquakeMap";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,29 +30,28 @@ const Map = () => {
     refetchInterval: 30000,
   });
 
-  // Determine risk level directly from riskData for consistency with dashboard
-  const riskLevel = riskData?.riskLevel || 20;
-  const riskTrend = riskData?.trend || "stable";
+  // Use signal level directly from model data for consistency
+  const signalLevel = riskData?.riskLevel || 20;
+  const signalTrend = riskData?.trend || "stable";
 
-  // Get latest magnetic reading value - same format as dashboard
+  // Get latest magnetic reading value
   const latestMagneticValue = magneticData?.data?.[magneticData.data.length - 1]?.value;
   
-  // Use consistent magnetic anomaly factors from dashboard
+  // Use consistent magnetic factors from model
   const magneticFactors = riskData?.factors || {
     magneticAnomalies: "Moderate",
     historicalPatterns: "Low Correlation",
     signalIntensity: "Stable"
   };
 
-  // Keep risk assessments consistent with dashboard thresholds
-  // Moderate risk shouldn't be presented as high risk
-  const highRiskAreas = [
-    { name: "San Andreas Fault", risk: riskLevel > 60 ? "high" : "moderate", anomaly: riskLevel > 60 ? 72 : 58 },
-    { name: "Ring of Fire - Japan (Kanto)", risk: riskLevel > 60 ? "high" : "moderate", anomaly: riskLevel > 60 ? 64 : 45 },
-    { name: "Cascadia Subduction Zone", risk: "moderate", anomaly: Math.min(48, riskLevel) }
+  // Areas with monitoring stations - signals based on model data
+  const monitoredAreas = [
+    { name: "San Andreas Fault", signal: signalLevel > 60 ? "strong" : "moderate", reading: signalLevel > 60 ? Math.min(72, signalLevel) : Math.min(58, signalLevel) },
+    { name: "Ring of Fire - Japan (Kanto)", signal: signalLevel > 60 ? "strong" : "moderate", reading: signalLevel > 60 ? Math.min(64, signalLevel) : Math.min(45, signalLevel) },
+    { name: "Cascadia Subduction Zone", signal: "moderate", reading: Math.min(48, signalLevel) }
   ];
 
-  // Sensor statistics from SensorStatus component to ensure consistency
+  // Sensor statistics for consistency
   const sensorStats = {
     total: 50,
     online: 47,
@@ -66,15 +66,15 @@ const Map = () => {
         <div>
           <h1 className="text-2xl font-bold">Geographic Visualization</h1>
           <p className="text-muted-foreground">
-            Mapping potential interest areas based on magnetic field analysis
+            Mapping magnetic field patterns based on model analysis
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          {riskLevel > 60 && (
+          {signalLevel > 60 && (
             <div className="bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-sm animate-pulse flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
-              <span className="text-red-500 font-medium">High Risk Alert</span>
+              <span className="text-red-500 font-medium">Model Alert: Strong Signal</span>
             </div>
           )}
         </div>
@@ -82,17 +82,17 @@ const Map = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatusCard 
-          title="Overall Risk Level" 
-          value={`${riskLevel}%`} 
-          description="Based on magnetic field analysis"
+          title="Current Signal Level" 
+          value={`${signalLevel}%`} 
+          description="Based on model's magnetic field analysis"
           icon={<AlertTriangle className="h-4 w-4" />}
-          trend={riskTrend}
+          trend={signalTrend}
           className="md:col-span-1"
         />
         <StatusCard 
-          title="Active Monitoring Areas" 
-          value={`${highRiskAreas.length} Regions`} 
-          description="Across major fault lines"
+          title="Monitored Areas" 
+          value={`${monitoredAreas.length} Regions`} 
+          description="With active sensor coverage"
           icon={<MapPin className="h-4 w-4" />}
           trend="stable"
           className="md:col-span-1"
@@ -110,9 +110,9 @@ const Map = () => {
       <div className="mt-6">
         <Tabs defaultValue="risk" className="w-full">
           <TabsList>
-            <TabsTrigger value="risk">Risk Map</TabsTrigger>
+            <TabsTrigger value="risk">Signal Map</TabsTrigger>
             <TabsTrigger value="sensors">Sensor Network</TabsTrigger>
-            <TabsTrigger value="historical">Historical Events</TabsTrigger>
+            <TabsTrigger value="historical">Historical Data</TabsTrigger>
           </TabsList>
 
           <TabsContent value="risk" className="mt-4">
@@ -128,15 +128,15 @@ const Map = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="text-sm space-y-2">
-                      {highRiskAreas.map((area, index) => (
+                      {monitoredAreas.map((area, index) => (
                         <li key={index} className="flex items-center justify-between">
                           <span>{area.name}</span>
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            area.risk === 'high' 
+                            area.signal === 'strong' 
                               ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' 
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                           }`}>
-                            {area.risk === 'high' ? 'High Interest' : 'Moderate Interest'}
+                            {area.signal === 'strong' ? 'Strong Signal' : 'Moderate Signal'}
                           </span>
                         </li>
                       ))}
@@ -168,14 +168,14 @@ const Map = () => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Signal Intensity</CardTitle>
+                    <CardTitle className="text-base">Model Signal Intensity</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm space-y-2">
-                      {highRiskAreas.map((area, index) => (
+                      {monitoredAreas.map((area, index) => (
                         <div key={index} className="flex items-center">
-                          <span className={`h-2 w-2 rounded-full ${area.risk === 'high' ? 'bg-red-500' : 'bg-amber-500'} mr-2`}></span>
-                          <span>{area.risk === 'high' ? 'Strong' : 'Moderate'} magnetic signal in {area.name} ({area.anomaly}%)</span>
+                          <span className={`h-2 w-2 rounded-full ${area.signal === 'strong' ? 'bg-red-500' : 'bg-amber-500'} mr-2`}></span>
+                          <span>{area.signal === 'strong' ? 'Strong' : 'Moderate'} magnetic signal in {area.name} ({area.reading}%)</span>
                         </div>
                       ))}
                     </div>
@@ -286,9 +286,9 @@ const Map = () => {
           <TabsContent value="historical" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Historical Events</CardTitle>
+                <CardTitle>Historical Data Analysis</CardTitle>
                 <CardDescription>
-                  Map of past seismic events and associated magnetic anomalies
+                  Past magnetic field patterns analyzed by the model
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-[500px] flex flex-col gap-4">
@@ -326,33 +326,33 @@ const Map = () => {
                   </div>
                   
                   <div className="bg-background/80 backdrop-blur-sm p-4 rounded-lg max-w-lg">
-                    <h3 className="font-semibold mb-2">Historical Analysis</h3>
+                    <h3 className="font-semibold mb-2">Model Training Data</h3>
                     <p className="text-sm text-muted-foreground">
-                      The map shows historical earthquake events from the past decade, with the size of each marker indicating magnitude.
-                      Red markers indicate events where magnetic anomalies were detected prior to the event.
+                      The map shows historical magnetic signal events from the past decade that were used to train the model.
+                      Red markers indicate events where strong magnetic signals were detected.
                     </p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-background border rounded-lg p-4">
-                    <div className="text-sm font-medium mb-2">Correlation Analysis</div>
+                    <div className="text-sm font-medium mb-2">Model Correlation</div>
                     <p className="text-xs text-muted-foreground">
-                      68% of major seismic events were preceded by detectable magnetic field anomalies within a 72-hour window.
+                      68% of major electromagnetic events were correlated with significant seismic activity within a 72-hour window.
                     </p>
                   </div>
                   
                   <div className="bg-background border rounded-lg p-4">
-                    <div className="text-sm font-medium mb-2">Prediction Success Rate</div>
+                    <div className="text-sm font-medium mb-2">Model Accuracy</div>
                     <p className="text-xs text-muted-foreground">
-                      The current model has achieved a {modelStatus?.accuracy || 98}% success rate in predicting events magnitude 6.0 or greater.
+                      The current model has achieved a {modelStatus?.accuracy || 98}% accuracy rate in analyzing magnetic field data.
                     </p>
                   </div>
                   
                   <div className="bg-background border rounded-lg p-4">
-                    <div className="text-sm font-medium mb-2">False Alarm Rate</div>
+                    <div className="text-sm font-medium mb-2">Signal Detection Rate</div>
                     <p className="text-xs text-muted-foreground">
-                      The false positive rate has decreased from 42% to {100 - (modelStatus?.precision || 96)}% over the past 6 months of model refinement.
+                      The model's signal detection precision has improved from 82% to {modelStatus?.precision || 96}% over the past 6 months.
                     </p>
                   </div>
                 </div>

@@ -13,101 +13,100 @@ export function EarthquakeMap() {
   const [activeRegion, setActiveRegion] = useState(0);
   const [zoom, setZoom] = useState(1);
 
-  // Fetch risk assessment data for consistency
+  // Fetch risk assessment data from the model
   const { data: riskData } = useQuery({
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
     refetchInterval: 30000,
   });
   
-  // Get risk level from API data - consistent with dashboard
-  const riskLevel = riskData?.riskLevel || 20;
+  // Get signal level from API data
+  const signalLevel = riskData?.riskLevel || 20;
 
-  // Updated regions to respond to riskLevel from API
-  // Using more accurate threshold for high risk (60%+) to match dashboard
+  // Regions with monitoring stations - showing model's data, not creating new assessments
   const regions = [
     { 
       name: "San Andreas Fault - Northern Section", 
-      risk: riskLevel > 60 ? "high" : "moderate", 
+      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
       coordinates: "37.7749° N, 122.4194° W",
-      anomalyLevel: riskLevel > 60 ? 72 : 58,
+      signalReading: signalLevel > 60 ? Math.min(72, signalLevel) : Math.min(58, signalLevel),
       lastActivity: "2 days ago"
     },
     { 
       name: "San Andreas Fault - Central Section", 
-      risk: riskLevel > 60 ? "high" : "moderate", 
+      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
       coordinates: "35.3733° N, 120.4522° W",
-      anomalyLevel: riskLevel > 60 ? 68 : 54,
+      signalReading: signalLevel > 60 ? Math.min(68, signalLevel) : Math.min(54, signalLevel),
       lastActivity: "3 days ago"
     },
     { 
       name: "San Andreas Fault - Southern Section", 
-      risk: riskLevel > 60 ? "moderate" : "low", 
+      signal: signalLevel > 60 ? "moderate" : "low", 
       coordinates: "33.9416° N, 116.8111° W",
-      anomalyLevel: riskLevel > 60 ? 58 : 42,
+      signalReading: signalLevel > 60 ? Math.min(58, signalLevel) : Math.min(42, signalLevel),
       lastActivity: "5 days ago"
     },
     { 
       name: "Cascadia Subduction Zone - North", 
-      risk: "moderate", 
+      signal: signalLevel > 60 ? "moderate" : "low", 
       coordinates: "48.3895° N, 124.6351° W",
-      anomalyLevel: Math.min(48, riskLevel),
+      signalReading: Math.min(48, signalLevel),
       lastActivity: "1 week ago"
     },
     { 
       name: "Cascadia Subduction Zone - South", 
-      risk: "moderate", 
+      signal: signalLevel > 60 ? "moderate" : "low", 
       coordinates: "42.8865° N, 124.5641° W",
-      anomalyLevel: Math.min(42, riskLevel),
+      signalReading: Math.min(42, signalLevel),
       lastActivity: "2 weeks ago"
     },
     { 
       name: "New Madrid Fault Zone", 
-      risk: "minimal", 
+      signal: "low", 
       coordinates: "36.5707° N, 89.1089° W",
-      anomalyLevel: 12,
+      signalReading: 12,
       lastActivity: "8 months ago"
     },
     { 
       name: "Aleutian Islands - Western", 
-      risk: "low", 
+      signal: "low", 
       coordinates: "52.8222° N, 173.1686° W",
-      anomalyLevel: 32,
+      signalReading: 32,
       lastActivity: "3 weeks ago"
     },
     { 
       name: "Aleutian Islands - Eastern", 
-      risk: "low", 
+      signal: "low", 
       coordinates: "56.8083° N, 157.3960° W",
-      anomalyLevel: 28,
+      signalReading: 28,
       lastActivity: "1 month ago"
     },
     { 
       name: "Ring of Fire - Japan (Kanto)", 
-      risk: riskLevel > 60 ? "high" : "moderate", 
+      signal: signalLevel > 60 ? "strong" : signalLevel > 30 ? "moderate" : "low", 
       coordinates: "35.6762° N, 139.6503° E",
-      anomalyLevel: riskLevel > 60 ? 64 : 45,
+      signalReading: signalLevel > 60 ? Math.min(64, signalLevel) : Math.min(45, signalLevel),
       lastActivity: "2 days ago"
     },
     { 
       name: "Ring of Fire - Japan (Tohoku)", 
-      risk: "moderate", 
+      signal: signalLevel > 60 ? "moderate" : "low", 
       coordinates: "38.2682° N, 140.8694° E",
-      anomalyLevel: 45,
+      signalReading: Math.min(45, signalLevel),
       lastActivity: "6 days ago"
     },
     { 
       name: "Ring of Fire - Japan (Kyushu)", 
-      risk: "moderate", 
+      signal: signalLevel > 60 ? "moderate" : "low", 
       coordinates: "33.5904° N, 130.4017° E",
-      anomalyLevel: 40,
+      signalReading: Math.min(40, signalLevel),
       lastActivity: "1 week ago"
     },
     { 
       name: "Denali Fault System", 
-      risk: "low", 
+      signal: "low", 
       coordinates: "63.1148° N, 151.1926° W",
-      anomalyLevel: 22,
+      signalReading: 22,
       lastActivity: "2 months ago"
     },
   ];
@@ -137,16 +136,14 @@ export function EarthquakeMap() {
     return () => clearTimeout(timer);
   }, []);
 
-  const getRiskBadge = (risk: string) => {
-    switch (risk) {
-      case "high":
+  const getSignalBadge = (signal: string) => {
+    switch (signal) {
+      case "strong":
         return <Badge className="bg-red-500">Strong Signal</Badge>;
       case "moderate":
         return <Badge className="bg-amber-500">Moderate Signal</Badge>;
       case "low":
         return <Badge className="bg-blue-500">Low Signal</Badge>;
-      case "minimal":
-        return <Badge className="bg-green-500">Minimal Signal</Badge>;
       default:
         return <Badge className="bg-slate-500">Unknown</Badge>;
     }
@@ -208,11 +205,11 @@ export function EarthquakeMap() {
             <MapPin 
               className={`
                 ${isActive ? 'text-red-500' : 'text-gray-500'}
-                ${region.risk === 'high' ? 'animate-pulse' : ''}
+                ${region.signal === 'strong' ? 'animate-pulse' : ''}
               `} 
               size={isActive ? 32 : 24} 
               strokeWidth={isActive ? 2.5 : 1.5}
-              fill={region.risk === 'high' ? 'rgba(255,0,0,0.2)' : 'transparent'}
+              fill={region.signal === 'strong' ? 'rgba(255,0,0,0.2)' : 'transparent'}
             />
             {isActive && (
               <div className="absolute -top-12 bg-background border border-border rounded-md p-2 shadow-lg whitespace-nowrap">
@@ -302,12 +299,12 @@ export function EarthquakeMap() {
                 {renderMapMarkers()}
               </div>
               
-              {/* Alert indicators for high signal areas */}
-              {regions.some(r => r.risk === 'high') && (
+              {/* Alert indicators for high signal areas - only show when model reports strong signal */}
+              {signalLevel > 60 && (
                 <div className="absolute top-4 right-4">
                   <div className="flex items-center gap-2 bg-red-500/20 border border-red-500 rounded-full px-3 py-1 text-xs animate-pulse">
                     <AlertTriangle className="h-3 w-3 text-red-500" />
-                    <span className="text-red-500 font-medium">Strong Signal</span>
+                    <span className="text-red-500 font-medium">Model Alert: Strong Signal</span>
                   </div>
                 </div>
               )}
@@ -321,13 +318,13 @@ export function EarthquakeMap() {
                     <h3 className="font-medium">{regions[activeRegion].name}</h3>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
                       <span>{regions[activeRegion].coordinates}</span>
-                      {getRiskBadge(regions[activeRegion].risk)}
+                      {getSignalBadge(regions[activeRegion].signal)}
                     </div>
                     <div className="mt-2 flex flex-col sm:flex-row gap-4 text-xs">
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">Signal:</span>
-                        <span className={`font-medium ${regions[activeRegion].anomalyLevel > 50 ? 'text-red-500' : regions[activeRegion].anomalyLevel > 30 ? 'text-amber-500' : 'text-green-500'}`}>
-                          {regions[activeRegion].anomalyLevel}%
+                        <span className={`font-medium ${regions[activeRegion].signalReading > 50 ? 'text-red-500' : regions[activeRegion].signalReading > 30 ? 'text-amber-500' : 'text-green-500'}`}>
+                          {regions[activeRegion].signalReading}%
                         </span>
                       </div>
                       <div className="flex items-center gap-1">

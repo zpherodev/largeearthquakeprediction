@@ -18,7 +18,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
     refetchInterval: 60000, // Refetch every minute
   });
   
-  const anomalyLevel = riskData?.riskLevel || 15;
+  const signalLevel = riskData?.riskLevel || 15;
   const trend = riskData?.trend || "stable";
   const factors = riskData?.factors || {
     magneticAnomalies: "Moderate",
@@ -26,15 +26,15 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
     signalIntensity: "Stable"
   };
   
-  const getAnomalyColor = () => {
-    if (anomalyLevel < 30) return "bg-green-500";
-    if (anomalyLevel < 60) return "bg-amber-500";
+  const getSignalColor = () => {
+    if (signalLevel < 30) return "bg-green-500";
+    if (signalLevel < 60) return "bg-amber-500";
     return "bg-red-500";
   };
   
-  const getAnomalyText = () => {
-    if (anomalyLevel < 30) return "Low Signal";
-    if (anomalyLevel < 60) return "Moderate Signal";
+  const getSignalText = () => {
+    if (signalLevel < 30) return "Low Signal";
+    if (signalLevel < 60) return "Moderate Signal";
     return "Strong Signal";
   };
   
@@ -73,20 +73,20 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
               <h4 className="text-sm font-medium">Current Signal Level</h4>
               <span 
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  anomalyLevel < 30 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
-                  anomalyLevel < 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : 
+                  signalLevel < 30 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
+                  signalLevel < 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : 
                   "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                 }`}
               >
-                {getAnomalyText()}
+                {getSignalText()}
               </span>
             </div>
-            <Progress value={anomalyLevel} className="h-2" indicatorClassName={getAnomalyColor()} />
+            <Progress value={signalLevel} className="h-2" indicatorClassName={getSignalColor()} />
             <p className="text-xs text-muted-foreground">{getTrendText()}</p>
           </div>
           
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Observed Factors</h4>
+            <h4 className="text-sm font-medium">Model-Detected Factors</h4>
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
                 <span>Magnetic Signals</span>
@@ -103,11 +103,11 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
             </ul>
           </div>
 
-          {anomalyLevel > 60 && (
+          {signalLevel > 60 && (
             <Alert variant="destructive" className="bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-800">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-red-800 dark:text-red-300 text-xs">
-                Note: Strong magnetic signal detected. Continued monitoring recommended.
+                Note: Model has detected strong magnetic signals. Continued monitoring recommended.
               </AlertDescription>
             </Alert>
           )}
@@ -115,7 +115,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
           <Alert className="bg-blue-50 border-blue-200 mt-2">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-xs text-blue-800">
-              This assessment is based on real-time NOAA GOES magnetometer data and historical correlation analysis.
+              This assessment is based on the model's analysis of real-time NOAA GOES magnetometer data and historical correlations.
             </AlertDescription>
           </Alert>
         </div>
