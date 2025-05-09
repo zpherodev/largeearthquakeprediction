@@ -18,37 +18,37 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
     refetchInterval: 60000, // Refetch every minute
   });
   
-  const signalLevel = riskData?.riskLevel || 15;
+  const variationLevel = riskData?.riskLevel || 15;
   const trend = riskData?.trend || "stable";
   const factors = riskData?.factors || {
-    magneticAnomalies: "Moderate",
+    magneticAnomalies: "Minimal",
     historicalPatterns: "Low Correlation",
-    signalIntensity: "Stable"
+    signalIntensity: "Within Normal Range"
   };
   
-  const getSignalColor = () => {
-    if (signalLevel < 30) return "bg-green-500";
-    if (signalLevel < 60) return "bg-amber-500";
+  const getVariationColor = () => {
+    if (variationLevel < 30) return "bg-green-500";
+    if (variationLevel < 60) return "bg-amber-500";
     return "bg-red-500";
   };
   
-  const getSignalText = () => {
-    if (signalLevel < 30) return "Low Signal";
-    if (signalLevel < 60) return "Moderate Signal";
-    return "Strong Signal";
+  const getVariationText = () => {
+    if (variationLevel < 30) return "Minimal Variations";
+    if (variationLevel < 60) return "Notable Variations";
+    return "Significant Variations";
   };
   
   const getTrendText = () => {
-    if (trend === "increasing") return "Signal level is increasing";
-    if (trend === "decreasing") return "Signal level is decreasing";
-    return "Signal level is stable";
+    if (trend === "increasing") return "Magnetic variations are increasing";
+    if (trend === "decreasing") return "Magnetic variations are decreasing";
+    return "Magnetic variations are stable";
   };
 
   if (isLoading) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Magnetic Signal Assessment</CardTitle>
+          <CardTitle>Magnetic Field Analysis</CardTitle>
           <CardDescription>Analyzing patterns in Earth's magnetic field</CardDescription>
         </CardHeader>
         <CardContent>
@@ -63,51 +63,51 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Magnetic Signal Assessment</CardTitle>
-        <CardDescription>Based on NOAA GOES Magnetometer data</CardDescription>
+        <CardTitle>Magnetic Field Analysis</CardTitle>
+        <CardDescription>Based on NOAA GOES Magnetometer data (24h)</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium">Current Signal Level</h4>
+              <h4 className="text-sm font-medium">Field Variations</h4>
               <span 
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  signalLevel < 30 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
-                  signalLevel < 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : 
+                  variationLevel < 30 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
+                  variationLevel < 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : 
                   "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                 }`}
               >
-                {getSignalText()}
+                {getVariationText()}
               </span>
             </div>
-            <Progress value={signalLevel} className="h-2" indicatorClassName={getSignalColor()} />
+            <Progress value={variationLevel} className="h-2" indicatorClassName={getVariationColor()} />
             <p className="text-xs text-muted-foreground">{getTrendText()}</p>
           </div>
           
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Model-Detected Factors</h4>
+            <h4 className="text-sm font-medium">Data Analysis Metrics</h4>
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
-                <span>Magnetic Signals</span>
+                <span>Field Variations</span>
                 <span className="text-xs font-medium">{factors.magneticAnomalies}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span>Historical Patterns</span>
+                <span>Historical Correlation</span>
                 <span className="text-xs font-medium">{factors.historicalPatterns}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span>Signal Intensity</span>
+                <span>Current Field Intensity</span>
                 <span className="text-xs font-medium">{factors.signalIntensity}</span>
               </li>
             </ul>
           </div>
 
-          {signalLevel > 60 && (
+          {variationLevel > 60 && (
             <Alert variant="destructive" className="bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-800">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-red-800 dark:text-red-300 text-xs">
-                Note: Model has detected strong magnetic signals. Continued monitoring recommended.
+                Note: Significant variations detected in magnetic field data over the past 24 hours.
               </AlertDescription>
             </Alert>
           )}
@@ -115,7 +115,7 @@ export function RiskAssessment({ className }: RiskAssessmentProps) {
           <Alert className="bg-blue-50 border-blue-200 mt-2">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-xs text-blue-800">
-              This assessment is based on the model's analysis of real-time NOAA GOES magnetometer data and historical correlations.
+              Analysis based on the last 24 hours of NOAA GOES magnetometer data compared to historical patterns.
             </AlertDescription>
           </Alert>
         </div>

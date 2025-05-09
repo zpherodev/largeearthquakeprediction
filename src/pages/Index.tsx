@@ -43,16 +43,16 @@ const Dashboard = () => {
   // Get latest reading value directly from NOAA data
   const latest = noaaData?.data?.[noaaData.data.length - 1];
   
-  // Determine risk level from risk assessment data
-  const riskLevel = riskData?.riskLevel || 20;
+  // Determine variation level from risk assessment data
+  const variationLevel = riskData?.riskLevel || 20;
   
-  // Signal intensity based on current magnetic readings
-  const signalIntensity = riskData?.factors?.signalIntensity || "Medium";
-  const signalTrend = signalIntensity === "High" ? "up" : 
-                      signalIntensity === "Low" ? "down" : "stable";
+  // Field intensity based on current magnetic readings
+  const fieldIntensity = riskData?.factors?.signalIntensity || "Within Normal Range";
+  const fieldTrend = fieldIntensity === "Above Normal" ? "up" : 
+                      fieldIntensity === "Below Normal" ? "down" : "stable";
   
-  // Determine anomaly detection status based on risk level
-  const anomalyActive = riskLevel > 30;
+  // Determine anomaly detection status based on variation level
+  const anomalyActive = variationLevel > 30;
   const regions = riskData?.monitoredRegions || 3;
   
   // Get prediction confidence from model data
@@ -86,11 +86,11 @@ const Dashboard = () => {
         />
 
         <StatusCard 
-          title="Signal Intensity" 
-          value={signalIntensity} 
-          description={`${signalTrend === "up" ? "↑" : signalTrend === "down" ? "↓" : "→"} from baseline`}
+          title="Field Intensity" 
+          value={fieldIntensity} 
+          description={`${fieldTrend === "up" ? "↑" : fieldTrend === "down" ? "↓" : "→"} from baseline`}
           icon={<Activity className="text-amber-600" />}
-          trend={signalTrend}
+          trend={fieldTrend}
         />
         <StatusCard 
           title="Anomaly Detection" 
@@ -100,7 +100,7 @@ const Dashboard = () => {
           trend="stable" 
         />
         <StatusCard 
-          title="Prediction Confidence" 
+          title="Model Confidence" 
           value={`${predictionConfidence}%`} 
           description="Based on current data"
           icon={<TrendingDown className="text-green-600" />}
