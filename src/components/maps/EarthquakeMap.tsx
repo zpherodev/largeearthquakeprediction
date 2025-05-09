@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -205,11 +204,11 @@ export function EarthquakeMap() {
             <MapPin 
               className={`
                 ${isActive ? 'text-red-500' : 'text-gray-500'}
-                ${region.signal === 'strong' ? 'animate-pulse' : ''}
+                ${region.variation === 'significant' ? 'animate-pulse' : ''}
               `} 
               size={isActive ? 32 : 24} 
               strokeWidth={isActive ? 2.5 : 1.5}
-              fill={region.signal === 'strong' ? 'rgba(255,0,0,0.2)' : 'transparent'}
+              fill={region.variation === 'significant' ? 'rgba(255,0,0,0.2)' : 'transparent'}
             />
             {isActive && (
               <div className="absolute -top-12 bg-background border border-border rounded-md p-2 shadow-lg whitespace-nowrap">
