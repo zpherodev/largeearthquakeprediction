@@ -32,7 +32,12 @@ const Map = () => {
 
   // Use variation level directly from model data for consistency
   const variationLevel = riskData?.riskLevel || 20;
-  const variationTrend = riskData?.trend || "stable";
+  
+  // The error is here - ensure variationTrend is properly typed
+  // Convert to correct type or use default "stable" when the trend isn't one of the accepted values
+  const validTrends = ["stable", "up", "down"];
+  const rawTrend = riskData?.trend || "stable"; 
+  const variationTrend = validTrends.includes(rawTrend) ? rawTrend as "stable" | "up" | "down" : "stable";
 
   // Get latest magnetic reading value
   const latestMagneticValue = magneticData?.data?.[magneticData.data.length - 1]?.value;
