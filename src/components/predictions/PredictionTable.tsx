@@ -37,7 +37,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
         <CardHeader>
           <CardTitle>Earthquake Predictions (≥ M6.0)</CardTitle>
           <CardDescription>
-            Generated forecasts based on magnetic field analysis
+            Generated forecasts based on real-time magnetic field analysis
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -63,7 +63,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
       <CardHeader>
         <CardTitle>Earthquake Predictions (≥ M6.0)</CardTitle>
         <CardDescription>
-          Generated forecasts based on magnetic field analysis for significant events
+          Generated forecasts based on real-time magnetic field analysis for significant events
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -80,7 +80,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
                       <Info className="h-3 w-3" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs text-xs">Estimated magnitude based on historical correlations between magnetic anomalies and seismic events.</p>
+                      <p className="max-w-xs text-xs">Estimated magnitude based on real-time magnetic field anomalies and their correlation with seismic events.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -93,7 +93,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
                       <Info className="h-3 w-3" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs text-xs">Scientifically calculated probability based on magnetic field anomaly patterns and historical correlation data.</p>
+                      <p className="max-w-xs text-xs">Calculated probability based on current magnetic field measurements and pattern recognition of precursor signals.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -106,7 +106,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
                       <Info className="h-3 w-3" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs text-xs">Expected time window during which the event may occur if the prediction is accurate.</p>
+                      <p className="max-w-xs text-xs">Expected time window during which the event may occur based on real-time magnetic field analysis.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -120,7 +120,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
                         <Info className="h-3 w-3" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="max-w-xs text-xs">Statistical confidence in the prediction based on model certainty, signal clarity, and historical pattern matching.</p>
+                        <p className="max-w-xs text-xs">Statistical confidence in the prediction based on current magnetic field signal clarity and pattern detection strength.</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -149,7 +149,7 @@ export function PredictionTable({ predictions = [] }: PredictionTableProps) {
         <Alert variant="default" className="bg-blue-50 border-blue-200 mt-4">
           <Info className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            All predictions are peer-reviewed by seismologists before publication. The model has achieved 98% accuracy for M6.0+ events in controlled testing environments using historical data. Predictions should be considered informational and subject to scientific validation.
+            All predictions are generated using real-time magnetic field sensor data and are processed through our Large Earthquake Prediction Model. The model applies mathematical transformations to current magnetic readings to identify potential precursor patterns for M6.0+ events.
           </AlertDescription>
         </Alert>
       </CardContent>
