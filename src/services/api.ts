@@ -98,36 +98,66 @@ const FALLBACK = {
 
 export async function getMagneticData() {
   try {
+    console.log("Attempting to connect to backend API at:", API_BASE_URL);
+    
+    // Add timeout to prevent long waits if backend is unreachable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     // First try to fetch from local API server
     const response = await fetch(`${API_BASE_URL}/magnetic-data`, { 
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      console.log("Successfully connected to backend API");
+      return data;
     }
     
     console.log("Local API not available, using NOAA data directly");
     // Fallback to direct NOAA data
     return fetchNOAAMagneticData();
   } catch (error) {
-    console.error("Error fetching magnetic data:", error);
+    if (error.name === 'AbortError') {
+      console.error("Connection to backend API timed out, falling back to NOAA");
+    } else {
+      console.error("Error fetching magnetic data:", error);
+    }
     return fetchNOAAMagneticData();
   }
 }
 
 export async function getModelStatus() {
   try {
+    console.log("Attempting to connect to backend API for model status");
+    
+    // Add timeout to prevent long waits if backend is unreachable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     // First try to fetch from local API server
     const response = await fetch(`${API_BASE_URL}/model-status`, { 
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      console.log("Successfully retrieved model status from backend");
+      return data;
     }
   } catch (error) {
-    console.error("Error fetching model status from backend:", error);
+    if (error.name === 'AbortError') {
+      console.error("Connection to backend API for model status timed out");
+    } else {
+      console.error("Error fetching model status from backend:", error);
+    }
   }
 
   console.log("Using model status fallback data");
@@ -179,16 +209,31 @@ export async function getRiskAssessment() {
 
 export async function getPredictions() {
   try {
+    console.log("Attempting to connect to backend API for predictions");
+    
+    // Add timeout to prevent long waits if backend is unreachable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     // First try to fetch from local API server
     const response = await fetch(`${API_BASE_URL}/predictions`, { 
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      console.log("Successfully retrieved predictions from backend");
+      return data;
     }
   } catch (error) {
-    console.error("Error fetching predictions from backend:", error);
+    if (error.name === 'AbortError') {
+      console.error("Connection to backend API for predictions timed out");
+    } else {
+      console.error("Error fetching predictions from backend:", error);
+    }
   }
 
   console.log("Using predictions fallback data");
@@ -200,14 +245,21 @@ export async function triggerPrediction(): Promise<{ success: boolean; message?:
   try {
     console.log("Triggering prediction with local Flask API at:", API_BASE_URL);
     
+    // Add timeout to prevent long waits if backend is unreachable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for predictions
+    
     // Make a request to the Flask backend
     const response = await fetch(`${API_BASE_URL}/trigger-prediction`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      }
+      },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     // Log the response status to help with debugging
     console.log("Prediction API response status:", response.status);
@@ -218,9 +270,24 @@ export async function triggerPrediction(): Promise<{ success: boolean; message?:
     
     const result = await response.json();
     console.log("Prediction result:", result);
+    
+    // Notify user about successful prediction
+    toast.success(`Successfully triggered prediction process`);
+    
     return result;
   } catch (error) {
     console.error("Error triggering prediction:", error);
+    
+    // Show different error messages based on the type of error
+    if (error.name === 'AbortError') {
+      toast.error("Prediction request timed out. Is the backend running?");
+      return { 
+        success: false, 
+        message: "Connection to backend timed out",
+        predictionCount: 0
+      };
+    }
+    
     return { 
       success: false, 
       message: error instanceof Error ? error.message : "Backend functionality not available",
