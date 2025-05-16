@@ -20,26 +20,18 @@ const Dashboard = () => {
     retry: 3,
   });
 
-  // Fetch model status
+  // Fetch model status using fallback data
   const { data: modelStatus, isLoading: modelLoading } = useQuery({
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 60000,
-    onError: () => {
-      // Silently handle backend connection errors
-      console.log("Backend connection error - using fallback data");
-    }
   });
 
-  // Fetch risk assessment data
+  // Fetch risk assessment data using fallback data
   const { data: riskData, isLoading: riskLoading } = useQuery({
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
     refetchInterval: 60000,
-    onError: () => {
-      // Silently handle backend connection errors
-      console.log("Backend connection error - using fallback data");
-    }
   });
 
   // Only show toast notification if there's an error with NOAA data

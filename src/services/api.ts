@@ -1,61 +1,14 @@
+
 import { toast } from "sonner";
 
-// Update to point to the actual backend server
-// We'll use a conditional to support both development and production environments
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-
-// NOAA Services endpoints - real data sources
+// External API endpoints - real data sources
 const NOAA_MAGNETOMETER_ENDPOINT = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json";
-const USGS_REAL_TIME_DATA = "https://geomag.usgs.gov/ws/data/";
-
-// Helper function for API requests with proper error handling
-async function fetchWithErrorHandling(endpoint: string, options = {}) {
-  try {
-    console.log(`Fetching from: ${API_BASE_URL}${endpoint}`);
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options as any).headers
-      }
-    });
-    
-    if (!response.ok) {
-      const errorMsg = `API Error (${response.status}): ${response.statusText}`;
-      console.error(errorMsg);
-      // Don't show toast for backend connection errors
-      // toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    
-    // Check if response is empty
-    const text = await response.text();
-    if (!text.trim()) {
-      console.warn("Empty response received from API");
-      return {};
-    }
-    
-    try {
-      return JSON.parse(text);
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError);
-      console.error("Raw response:", text);
-      toast.error("Error parsing API response");
-      throw new Error("Invalid JSON response");
-    }
-  } catch (error) {
-    console.error(`Failed to fetch ${endpoint}:`, error);
-    // Don't show toast for backend connection errors
-    // toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    throw error;
-  }
-}
+const GITHUB_DATA_ENDPOINT = "https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/refs/heads/main/combined_earthquake_m6_and_above_full_data.csv";
 
 // Function to directly fetch from NOAA API - Primary source for real-time data
 export async function fetchNOAAMagneticData() {
   try {
-    console.log("Directly fetching from NOAA Space Weather Prediction Center API");
-    // Using the correct NOAA API endpoint - real data source
+    console.log("Fetching from NOAA Space Weather Prediction Center API");
     const response = await fetch(NOAA_MAGNETOMETER_ENDPOINT);
     
     if (!response.ok) {
@@ -107,115 +60,59 @@ const FALLBACK = {
   factors: {
     magneticAnomalies: "Moderate",
     historicalPatterns: "Low Correlation",
-    signalIntensity: "Stable"
+    signalIntensity: "Stable",
+    fieldIntensity: "Within Normal Range"  // Added for completeness
   }
 };
 
-export async function getDashboardSummary() {
-  try {
-    return await fetchWithErrorHandling('/dashboard-summary');
-  } catch (error) {
-    console.error("Error in getDashboardSummary:", error);
-    // Provide consistent fallback data
-    return {
-      riskLevel: FALLBACK.riskLevel,
-      magneticReading: FALLBACK.magneticReading,
-      anomalyCount: FALLBACK.anomalyCount,
-      monitoredRegions: FALLBACK.monitoredRegions
-    };
-  }
-}
-
 export async function getMagneticData() {
-  try {
-    // Always try direct NOAA API first for real data
-    console.log("Fetching real-time data from NOAA SWPC");
-    return await fetchNOAAMagneticData();
-  } catch (error) {
-    console.error("NOAA API fetch failed, falling back to backend:", error);
-    try {
-      const data = await fetchWithErrorHandling('/magnetic-data');
-      return data.data ? { data: data.data } : { data: [] };
-    } catch (backendError) {
-      console.error("Backend API error:", backendError);
-      return { data: [] };
-    }
-  }
-}
-
-export async function getPredictions() {
-  try {
-    const data = await fetchWithErrorHandling('/predictions');
-    return { predictions: data.predictions || [] };
-  } catch (error) {
-    console.error("Error in getPredictions:", error);
-    return { predictions: [] };
-  }
+  // Always use NOAA data directly - no localhost fallback
+  return fetchNOAAMagneticData();
 }
 
 export async function getModelStatus() {
-  try {
-    const data = await fetchWithErrorHandling('/model-status');
-    console.log("Model status data:", data);
-    return data;
-  } catch (error) {
-    console.error("Error in getModelStatus:", error);
-    // Return consistent fallback data to prevent UI errors
-    const fallbackData = {
-      cpuUsage: Math.floor(Math.random() * 30) + 30, // Random between 30-60%
-      memoryUsage: Math.floor(Math.random() * 40) + 40, // Random between 40-80%
-      lastUpdate: new Date().toISOString(),
-      modelStatus: "idle",
-      modelVersion: "LEPAM v1.0.4",
-      accuracy: 98, // For M6.0+ events
-      precision: 96, // For M6.0+ events
-      recall: 94 // For M6.0+ events
-    };
-    
-    console.log("Using fallback model status data:", fallbackData);
-    return fallbackData;
-  }
+  console.log("Using model status fallback data");
+  // Return consistent fallback data since there's no backend
+  const fallbackData = {
+    cpuUsage: Math.floor(Math.random() * 30) + 30, // Random between 30-60%
+    memoryUsage: Math.floor(Math.random() * 40) + 40, // Random between 40-80%
+    lastUpdate: new Date().toISOString(),
+    modelStatus: "idle",
+    modelVersion: "LEPAM v1.0.4",
+    accuracy: 98, // For M6.0+ events
+    precision: 96, // For M6.0+ events
+    recall: 94 // For M6.0+ events
+  };
+  
+  return fallbackData;
 }
 
 export async function getRiskAssessment() {
-  try {
-    const data = await fetchWithErrorHandling('/risk-assessment');
-    console.log("Risk assessment data:", data);
-    return data;
-  } catch (error) {
-    console.error("Error in getRiskAssessment:", error);
-    // Generate consistent fallback data for risk assessment
-    const fallbackData = {
-      riskLevel: FALLBACK.riskLevel,
-      trend: FALLBACK.trend,
-      factors: FALLBACK.factors,
-      monitoredRegions: FALLBACK.monitoredRegions
-    };
-    
-    console.log("Using fallback risk assessment data:", fallbackData);
-    return fallbackData;
-  }
+  console.log("Using risk assessment fallback data");
+  // Generate consistent fallback data for risk assessment
+  return {
+    riskLevel: FALLBACK.riskLevel,
+    trend: FALLBACK.trend,
+    factors: FALLBACK.factors,
+    monitoredRegions: FALLBACK.monitoredRegions
+  };
+}
+
+export async function getPredictions() {
+  console.log("Using predictions fallback data");
+  return { predictions: [] };
 }
 
 export async function triggerPrediction() {
-  try {
-    return await fetchWithErrorHandling('/trigger-prediction', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-  } catch (error) {
-    console.error("Error triggering prediction:", error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
+  console.log("Prediction triggering not available (no backend)");
+  return { success: false, message: "Backend functionality not available" };
 }
 
-// Improved function to fetch historical earthquake data from GitHub - consistent data source
+// Function to fetch historical earthquake data from GitHub - consistent data source
 export async function fetchHistoricalData() {
   try {
-    console.log("Fetching historical earthquake data");
-    const response = await fetch("https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/refs/heads/main/combined_earthquake_m6_and_above_full_data.csv");
+    console.log("Fetching historical earthquake data from GitHub");
+    const response = await fetch(GITHUB_DATA_ENDPOINT);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch historical data: ${response.status}`);

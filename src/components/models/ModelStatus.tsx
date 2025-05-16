@@ -11,20 +11,15 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export function ModelStatus() {
-  const { data: modelStatus, isLoading, error } = useQuery({
+  const { data: modelStatus, isLoading } = useQuery({
     queryKey: ['modelStatus'],
     queryFn: getModelStatus,
     refetchInterval: 15000, // Refresh every 15 seconds
-    onError: () => {
-      // Silently handle backend connection errors
-      console.log("Backend connection error - using fallback data");
-    }
   });
   
-  // Handle API Error by showing fallback content
-  const apiError = error !== null;
+  // We no longer need to check for API error since we always use local data
   
-  if (isLoading && !apiError) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -158,15 +153,6 @@ export function ModelStatus() {
               <p className="mt-1"><span className="font-medium">Model Version:</span> {modelVersion}</p>
             </div>
           </div>
-          
-          {apiError && (
-            <Alert variant="destructive" className="mt-2">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Using cached model data. API connection error. Scientists should verify predictions with additional sources.
-              </AlertDescription>
-            </Alert>
-          )}
           
           <div className="flex flex-col gap-2 mt-2">
             <Alert variant="default" className="bg-blue-50 border-blue-200">

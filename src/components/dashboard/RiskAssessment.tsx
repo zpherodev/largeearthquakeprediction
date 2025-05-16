@@ -12,7 +12,7 @@ interface RiskAssessmentProps {
 }
 
 export function RiskAssessment({ className }: RiskAssessmentProps) {
-  const { data: riskData, isLoading, error } = useQuery({
+  const { data: riskData, isLoading } = useQuery({
     queryKey: ['riskAssessment'],
     queryFn: getRiskAssessment,
     refetchInterval: 60000, // Refetch every minute
