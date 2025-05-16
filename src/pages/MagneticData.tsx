@@ -43,7 +43,7 @@ const MagneticData = () => {
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-medium mb-3">Magnetic Declination Inclination Error (mdig)</h3>
+            <h3 className="text-xl font-medium mb-3">Magnetic Inclination Error (mdig)</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Threshold for significant anomalies: <span className="font-bold text-amber-600">0.2 radians (~11.46°)</span>
             </p>
@@ -64,6 +64,9 @@ const MagneticData = () => {
                 <span>0.4</span>
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Formula: inclination = arctan(√(He² + Hn²) / Hp)
+            </p>
           </div>
         </div>
       </div>
