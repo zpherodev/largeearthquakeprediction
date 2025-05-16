@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // External API endpoints - real data sources
@@ -72,7 +71,7 @@ export async function getMagneticData() {
 
 export async function getModelStatus() {
   console.log("Using model status fallback data");
-  // Return consistent fallback data since there's no backend
+  // Return consistent fallback data with additional properties for the Predictions page
   const fallbackData = {
     cpuUsage: Math.floor(Math.random() * 30) + 30, // Random between 30-60%
     memoryUsage: Math.floor(Math.random() * 40) + 40, // Random between 40-80%
@@ -81,7 +80,14 @@ export async function getModelStatus() {
     modelVersion: "LEPAM v1.0.4",
     accuracy: 98, // For M6.0+ events
     precision: 96, // For M6.0+ events
-    recall: 94 // For M6.0+ events
+    recall: 94, // For M6.0+ events
+    // Adding additional properties needed by the Predictions page
+    lastTrainingDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    trainingScheduled: Math.random() > 0.5, // Randomly scheduled or not
+    trainingProgress: 0,
+    lastPracticeDate: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    practiceProgress: 0,
+    practiceCount: Math.floor(Math.random() * 50) + 100 // Random between 100-150
   };
   
   return fallbackData;

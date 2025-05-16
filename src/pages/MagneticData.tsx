@@ -21,7 +21,7 @@ const MagneticData = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
             <h3 className="text-xl font-medium mb-3">Declination Error (decr)</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Threshold for significant anomalies: <span className="font-bold text-amber-600">0.04 radians</span>
+              Threshold for significant anomalies: <span className="font-bold text-amber-600">0.04 radians (~2.29°)</span>
             </p>
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">
@@ -45,7 +45,7 @@ const MagneticData = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
             <h3 className="text-xl font-medium mb-3">Magnetic Declination Inclination Error (mdig)</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Threshold for significant anomalies: <span className="font-bold text-amber-600">0.2 radians</span>
+              Threshold for significant anomalies: <span className="font-bold text-amber-600">0.2 radians (~11.46°)</span>
             </p>
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">

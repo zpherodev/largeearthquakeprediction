@@ -1,4 +1,3 @@
-
 import { PredictionTable } from "@/components/predictions/PredictionTable";
 import { HistoricalDataTable } from "@/components/predictions/HistoricalDataTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,24 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 
+// Define a more comprehensive model status interface to fix TypeScript errors
+interface ModelStatus {
+  cpuUsage: number;
+  memoryUsage: number;
+  lastUpdate: string;
+  modelStatus: string;
+  modelVersion: string;
+  accuracy: number;
+  precision: number;
+  recall: number;
+  lastTrainingDate?: string;
+  trainingScheduled?: boolean;
+  trainingProgress?: number;
+  lastPracticeDate?: string;
+  practiceProgress?: number;
+  practiceCount?: number;
+}
+
 const Predictions = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -22,8 +39,8 @@ const Predictions = () => {
     refetchInterval: 30000,
   });
 
-  // Fetch model status data for metrics
-  const { data: modelStatus } = useQuery({
+  // Fetch model status data for metrics with proper typing
+  const { data: modelStatus } = useQuery<ModelStatus>({
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 30000,
@@ -62,31 +79,29 @@ const Predictions = () => {
 
   // Extract metrics from model status - updated for M6.0+ events
   const metrics = modelStatus ? {
-    accuracy: modelStatus.accuracy || 98, // Increased for M6.0+ events
-    precision: modelStatus.precision || 96, // Increased for M6.0+ events
-    recall: modelStatus.recall || 94, // Increased for M6.0+ events
+    accuracy: modelStatus.accuracy || 98,
+    precision: modelStatus.precision || 96,
+    recall: modelStatus.recall || 94,
     f1Score: Math.round(((modelStatus.precision || 96) * (modelStatus.recall || 94) * 2) / 
               ((modelStatus.precision || 96) + (modelStatus.recall || 94)) * 10) / 10
   } : {
-    accuracy: 98, // Increased for M6.0+ events
-    precision: 96, // Increased for M6.0+ events
-    recall: 94, // Increased for M6.0+ events
-    f1Score: 95.0 // Increased for M6.0+ events
+    accuracy: 98,
+    precision: 96,
+    recall: 94,
+    f1Score: 95.0
   };
 
-  // Feature importance data (could come from API in a real implementation)
+  // Feature importance data
   const featureImportance = [
-    { feature: "Magnetic Field Anomalies", importance: 0.95, trend: "up" }, // Increased importance
-    { feature: "Signal Resonance Patterns", importance: 0.84, trend: "up" }, // Increased importance
-    { feature: "Historical Correlation", importance: 0.78, trend: "up" }, // Increased importance
-    { feature: "Geological Context", importance: 0.89, trend: "up" }, // Increased importance
-    { feature: "Temporal Patterns", importance: 0.81, trend: "up" } // Increased importance
+    { feature: "Magnetic Field Anomalies", importance: 0.95, trend: "up" },
+    { feature: "Signal Resonance Patterns", importance: 0.84, trend: "up" },
+    { feature: "Historical Correlation", importance: 0.78, trend: "up" },
+    { feature: "Geological Context", importance: 0.89, trend: "up" },
+    { feature: "Temporal Patterns", importance: 0.81, trend: "up" }
   ];
 
   // Cast the historical data to the correct type with magnetic thresholds
   const typedHistoricalData = historicalData ? historicalData.map((item, index) => {
-    // Derive magnetic parameters based on magnitude and depth
-    // These are synthetic values that would correlate with earthquake magnitude
     const baseValue = typeof item.mag === 'number' ? item.mag : 6.0;
     const depthFactor = typeof item.depth === 'number' ? item.depth / 100 : 0.1;
     
@@ -100,14 +115,13 @@ const Predictions = () => {
       magType: item.magType || "",
       place: item.place || "",
       status: item.status || "",
-      // Add magnetic threshold data (synthetic)
       magneticAnomaly: Math.round((baseValue * 2.5 + depthFactor * 5) * 10) / 10,
       resonancePattern: Math.round((baseValue * 1.8 + depthFactor * 3) * 10) / 10,
       signalIntensity: Math.round((baseValue * 3.2 + depthFactor * 4) * 10) / 10
     };
   }) : [];
 
-  // Get training and practice info from model status
+  // Get training and practice info from model status with default values to handle undefined properties
   const trainingInfo = {
     lastTrainingDate: modelStatus?.lastTrainingDate ? new Date(modelStatus.lastTrainingDate) : null,
     trainingScheduled: modelStatus?.trainingScheduled || false,
