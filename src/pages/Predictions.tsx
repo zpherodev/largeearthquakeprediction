@@ -67,14 +67,14 @@ const Predictions = () => {
       if (result && result.success) {
         toast({
           title: "Prediction Generated",
-          description: `Successfully generated ${result.predictionCount || 0} new predictions.`,
+          description: `Successfully generated ${result.predictionCount ?? 0} new predictions.`,
           variant: "default",
         });
         await refetch();
       } else {
         toast({
           title: "Prediction Failed",
-          description: "The system couldn't generate new predictions. This could be because the backend is running in simulation mode.",
+          description: result.message || "The system couldn't generate new predictions. This could be because the backend is running in simulation mode.",
           variant: "destructive",
         });
         console.log("Prediction result:", result);

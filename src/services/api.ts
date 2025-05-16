@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // External API endpoints - real data sources
@@ -138,9 +137,33 @@ export async function getPredictions() {
   return { predictions: [] };
 }
 
-export async function triggerPrediction() {
-  console.log("Prediction triggering not available (no backend)");
-  return { success: false, message: "Backend functionality not available" };
+// Updated to include predictionCount in the return type
+export async function triggerPrediction(): Promise<{ success: boolean; message?: string; predictionCount?: number }> {
+  try {
+    console.log("Trying to trigger prediction with local model");
+    
+    // Check if we're running with a backend
+    const response = await fetch('/api/trigger-prediction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to trigger prediction: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error triggering prediction:", error);
+    return { 
+      success: false, 
+      message: "Backend functionality not available",
+      predictionCount: 0
+    };
+  }
 }
 
 // Function to fetch historical earthquake data from GitHub - consistent data source

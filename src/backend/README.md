@@ -32,6 +32,14 @@ The server will run on port 5000 by default and will serve the following API end
 
 The frontend React application is configured to connect to this backend service. Make sure the environment variable `VITE_API_BASE_URL` in the frontend project is set to `http://localhost:5000/api` (or the appropriate URL if deployed elsewhere).
 
+## Local Model Setup
+
+When using a locally stored model:
+
+1. Place the `earthquake_prediction_model.pkl` file directly in the `src/backend/` directory
+2. The application will automatically use the local model file
+3. No need to download it from external repositories
+
 ## Using the Actual Model
 
 The current implementation includes placeholder code for generating synthetic data. To use your actual earthquake prediction model:
