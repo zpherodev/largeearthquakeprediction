@@ -25,6 +25,10 @@ const Dashboard = () => {
     queryKey: ["modelStatus"],
     queryFn: getModelStatus,
     refetchInterval: 60000,
+    onError: () => {
+      // Silently handle backend connection errors
+      console.log("Backend connection error - using fallback data");
+    }
   });
 
   // Fetch risk assessment data
@@ -32,9 +36,13 @@ const Dashboard = () => {
     queryKey: ["riskAssessment"],
     queryFn: getRiskAssessment,
     refetchInterval: 60000,
+    onError: () => {
+      // Silently handle backend connection errors
+      console.log("Backend connection error - using fallback data");
+    }
   });
 
-  // Show toast notification if there's an error with NOAA data
+  // Only show toast notification if there's an error with NOAA data
   if (noaaError) {
     console.error("Failed to fetch NOAA data:", noaaError);
     toast.error("Unable to connect to NOAA data service. Some information may not be current.");

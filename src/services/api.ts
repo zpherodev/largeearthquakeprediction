@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Update to point to the actual backend server
@@ -24,7 +23,8 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
     if (!response.ok) {
       const errorMsg = `API Error (${response.status}): ${response.statusText}`;
       console.error(errorMsg);
-      toast.error(errorMsg);
+      // Don't show toast for backend connection errors
+      // toast.error(errorMsg);
       throw new Error(errorMsg);
     }
     
@@ -45,7 +45,8 @@ async function fetchWithErrorHandling(endpoint: string, options = {}) {
     }
   } catch (error) {
     console.error(`Failed to fetch ${endpoint}:`, error);
-    toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Don't show toast for backend connection errors
+    // toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 }

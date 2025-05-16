@@ -15,6 +15,10 @@ export function ModelStatus() {
     queryKey: ['modelStatus'],
     queryFn: getModelStatus,
     refetchInterval: 15000, // Refresh every 15 seconds
+    onError: () => {
+      // Silently handle backend connection errors
+      console.log("Backend connection error - using fallback data");
+    }
   });
   
   // Handle API Error by showing fallback content
