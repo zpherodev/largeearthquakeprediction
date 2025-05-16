@@ -11,7 +11,9 @@ This is a Flask-based backend service that connects to the Random Forest earthqu
 pip install -r requirements.txt
 ```
 
-2. Place your trained Random Forest model (`earthquake_prediction_model.pkl`) in this directory or update the `MODEL_PATH` environment variable to point to its location.
+2. Ensure the following files are present in the `src/backend/` directory:
+   - `random_forest_model_full_updated.pkl` - The trained ML model
+   - `scaler_full_updated.pkl` - The data scaler for preprocessing
 
 3. Start the server:
 
@@ -26,25 +28,25 @@ The server will run on port 5000 by default and will serve the following API end
 - `/api/model-status` - Check the status of the prediction model
 - `/api/risk-assessment` - Get the current risk assessment
 - `/api/trigger-prediction` - Manually trigger a new prediction
-- `/api/health` - Health check endpoint
+- `/api/health` - Health check endpoint (now includes model and scaler status)
 
 ## Integration with the Frontend
 
 The frontend React application is configured to connect to this backend service. Make sure the environment variable `VITE_API_BASE_URL` in the frontend project is set to `http://localhost:5000/api` (or the appropriate URL if deployed elsewhere).
 
-## Local Model Setup
+## Using the Local Model Files
 
-When using a locally stored model:
+The backend is configured to use the following local files:
+1. `random_forest_model_full_updated.pkl` - Trained Random Forest model
+2. `scaler_full_updated.pkl` - Data scaler used to normalize input features
 
-1. Place the `earthquake_prediction_model.pkl` file directly in the `src/backend/` directory
-2. The application will automatically use the local model file
-3. No need to download it from external repositories
+The application will automatically look for these files in the current directory (`src/backend/`).
 
 ## Using the Actual Model
 
-The current implementation includes placeholder code for generating synthetic data. To use your actual earthquake prediction model:
+The current implementation uses real model files but still generates simulated data for various features:
 
-1. Update the `fetch_emag_data()` function to connect to your actual EMAG2 data source.
+1. To use real data sources, update the `fetch_emag_data()` function to connect to your actual EMAG2 data source.
 2. Make sure the data is properly formatted with all required features:
    - `decg`: Declination in degrees
    - `dbhg`: Horizontal field component
@@ -54,7 +56,6 @@ The current implementation includes placeholder code for generating synthetic da
    - `mfir`: Magnetic field intensity in radians
    - `mdig`: Magnetic declination inclination in degrees
    - `mdir`: Magnetic declination inclination in radians
-3. Ensure the model is loaded correctly from the `.pkl` file.
 
 ## Deployment
 

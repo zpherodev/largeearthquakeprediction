@@ -1,3 +1,4 @@
+
 # Python backend for Earthquake Prediction Model
 # To run this server:
 # 1. Install requirements: pip install flask flask-cors pandas scikit-learn
@@ -21,11 +22,13 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Path to the saved model
-MODEL_PATH = os.environ.get('MODEL_PATH', 'earthquake_prediction_model.pkl')
+# Path to the saved model and scaler - these files are now local
+MODEL_PATH = os.environ.get('MODEL_PATH', 'random_forest_model_full_updated.pkl')
+SCALER_PATH = os.environ.get('SCALER_PATH', 'scaler_full_updated.pkl')
 
 # Model and data globals
 model = None
+scaler = None
 last_data_fetch = None
 magnetic_data = []
 current_predictions = []
@@ -49,41 +52,33 @@ risk_assessment = {
     }
 }
 
-import requests
-
 def load_model():
-    """Load the trained Random Forest model from local file or GitHub"""
-    global model
+    """Load the trained Random Forest model and scaler from local files"""
+    global model, scaler
     try:
+        # Check if model file exists locally
         if not os.path.exists(MODEL_PATH):
-            logger.info("Model not found locally. Downloading from GitHub...")
-            url = "https://github.com/crknftart/Large-Earthquake-Prediction-Model/raw/main/earthquake_prediction_model.pkl"
-            response = requests.get(url)
-            with open(MODEL_PATH, 'wb') as f:
-                f.write(response.content)
-            logger.info("Model downloaded and saved.")
-
+            logger.error(f"Model file not found at {MODEL_PATH}")
+            return False
+            
+        # Check if scaler file exists locally
+        if not os.path.exists(SCALER_PATH):
+            logger.error(f"Scaler file not found at {SCALER_PATH}")
+            return False
+            
+        # Load the model
         with open(MODEL_PATH, 'rb') as file:
             model = pickle.load(file)
-        logger.info(f"Model loaded successfully from {MODEL_PATH}")
+            
+        # Load the scaler
+        with open(SCALER_PATH, 'rb') as file:
+            scaler = pickle.load(file)
+            
+        logger.info(f"Model and scaler loaded successfully from local files")
         return True
     except Exception as e:
-        logger.error(f"Error loading model: {e}")
+        logger.error(f"Error loading model or scaler: {e}")
         return False
-
-
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-import json
-import os
-from datetime import datetime
-import numpy as np
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # Cache file for magnetic data
 CACHE_FILE = "magnetic_data_cache.json"
@@ -131,7 +126,10 @@ def fetch_emag_data():
         raw_data = None
         for url in endpoints:
             try:
+                import requests
                 session = requests.Session()
+                from requests.adapters import HTTPAdapter
+                from urllib3.util.retry import Retry
                 retries = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504, 404])
                 session.mount('https://', HTTPAdapter(max_retries=retries))
                 response = session.get(url, timeout=10)
@@ -153,7 +151,7 @@ def fetch_emag_data():
                     logger.error(f"Unexpected JSON structure from {url}: {type(raw_data)}")
                     continue
                 break  # Success, exit loop
-            except requests.exceptions.RequestException as e:
+            except Exception as e:
                 logger.warning(f"Failed to fetch from {url}: {e}")
                 continue
 
@@ -218,11 +216,13 @@ def fetch_emag_data():
 
 def run_prediction():
     """Run the earthquake prediction model on the latest magnetic data"""
-    global model, magnetic_data, current_predictions, model_status, risk_assessment
+    global model, scaler, magnetic_data, current_predictions, model_status, risk_assessment
     
     if not model:
-        logger.error("Model not loaded. Cannot run predictions.")
-        return
+        success = load_model()
+        if not success:
+            logger.error("Failed to load model. Cannot run predictions.")
+            return []
     
     try:
         # Set model status to predicting during prediction
@@ -235,7 +235,18 @@ def run_prediction():
         
         if df.empty:
             logger.error("No valid data for prediction")
-            return
+            return []
+            
+        # Scale the data if we have a scaler
+        if scaler:
+            try:
+                scaled_data = scaler.transform(df)
+                df_scaled = pd.DataFrame(scaled_data, columns=features)
+                df = df_scaled
+                logger.info("Data successfully scaled using loaded scaler")
+            except Exception as e:
+                logger.error(f"Error scaling data: {e}")
+                # Continue with unscaled data
         
         # Make predictions
         pred_probabilities = model.predict_proba(df)[:, 1]  # Assuming binary classification
@@ -336,14 +347,41 @@ def get_risk_assessment():
 @app.route('/api/trigger-prediction', methods=['POST'])
 def trigger_prediction():
     """API endpoint to manually trigger a new prediction"""
-    fetch_emag_data()  # Get fresh data
-    predictions = run_prediction()  # Run prediction on new data
-    return jsonify({"success": True, "predictionCount": len(predictions) if predictions else 0})
+    try:
+        # Get fresh data
+        fetch_emag_data()  
+        # Run prediction on new data
+        predictions = run_prediction()
+        
+        if predictions is None or len(predictions) == 0:
+            return jsonify({
+                "success": False, 
+                "message": "No predictions were generated. Check server logs for details.",
+                "predictionCount": 0
+            })
+        
+        return jsonify({
+            "success": True, 
+            "message": f"Successfully generated {len(predictions)} predictions",
+            "predictionCount": len(predictions)
+        })
+    except Exception as e:
+        logger.error(f"Error in trigger prediction endpoint: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"Error generating predictions: {str(e)}",
+            "predictionCount": 0
+        }), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """API endpoint to check if the service is running"""
-    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+    return jsonify({
+        "status": "healthy", 
+        "timestamp": datetime.now().isoformat(),
+        "model_loaded": model is not None,
+        "scaler_loaded": scaler is not None
+    })
 
 if __name__ == "__main__":
     # Try to load model at startup
@@ -355,5 +393,5 @@ if __name__ == "__main__":
     # Initial prediction
     run_prediction()
     
-    # Start background thread for periodic updates
+    # Start the Flask app
     app.run(host='0.0.0.0', port=5000, debug=True)
