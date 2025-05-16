@@ -13,7 +13,7 @@ const About = () => {
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-6">
           <div className="mb-1">Magnetic Field Landslide and Earthquake Correlation Research By C.R. Kunferman</div>
           <div className="mb-1">Model Research and Development By C.R. Kunferman assisted by OpenAI</div>
-          <div>Model Implementation, full stack development by loveable.dev prompted and guided by C.R. Kunferman</div>
+          <div>Model Implementation, full stack development by attempted by loveable.dev prompted and guided by C.R. Kunferman however was unable to complete due to limitations on platform.</div>
         </div>
         
         <div className="space-y-6">
