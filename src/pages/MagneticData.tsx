@@ -1,8 +1,26 @@
 
 import { RiskAssessment } from "@/components/dashboard/RiskAssessment";
 import { MagneticChart } from "@/components/dashboard/MagneticChart";
+import { useQuery } from "@tanstack/react-query";
+import { getMagneticData } from "@/services/api";
 
 const MagneticData = () => {
+  // Fetch the latest magnetic data to display real calculations
+  const { data: magneticData } = useQuery({
+    queryKey: ["magneticData"],
+    queryFn: getMagneticData,
+    refetchInterval: 30000,
+  });
+  
+  // Get the latest readings for display
+  const latestData = magneticData?.data?.[magneticData.data.length - 1] || null;
+  const declination = latestData?.decr || 0.03;
+  const inclination = latestData?.mdig || 0.15;
+  
+  // Calculate percentages for progress bars based on thresholds
+  const declinationPercentage = Math.min((declination / 0.04) * 100, 100);
+  const inclinationPercentage = Math.min((inclination / 0.2) * 100, 100);
+  
   return (
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-3xl font-bold mb-6">Magnetic Field Analysis</h1>
@@ -26,12 +44,12 @@ const MagneticData = () => {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm">Current Value</span>
-                <span className="text-sm font-medium">0.03 radians</span>
+                <span className="text-sm font-medium">{declination.toFixed(3)} radians</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-green-500 h-2.5 rounded-full" 
-                  style={{ width: '75%' }}
+                  className={`h-2.5 rounded-full ${declinationPercentage > 90 ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${declinationPercentage}%` }}
                 ></div>
               </div>
               <div className="flex justify-between text-xs mt-1">
@@ -40,6 +58,9 @@ const MagneticData = () => {
                 <span>0.08</span>
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Formula: declination = arctan(He/Hn)
+            </p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
@@ -50,12 +71,12 @@ const MagneticData = () => {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm">Current Value</span>
-                <span className="text-sm font-medium">0.15 radians</span>
+                <span className="text-sm font-medium">{inclination.toFixed(3)} radians</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-green-500 h-2.5 rounded-full" 
-                  style={{ width: '75%' }}
+                  className={`h-2.5 rounded-full ${inclinationPercentage > 90 ? 'bg-red-500' : 'bg-green-500'}`} 
+                  style={{ width: `${inclinationPercentage}%` }}
                 ></div>
               </div>
               <div className="flex justify-between text-xs mt-1">

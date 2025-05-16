@@ -1,8 +1,23 @@
+
 import { toast } from "sonner";
 
 // External API endpoints - real data sources
 const NOAA_MAGNETOMETER_ENDPOINT = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json";
 const GITHUB_DATA_ENDPOINT = "https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/refs/heads/main/combined_earthquake_m6_and_above_full_data.csv";
+
+// Calculate magnetic declination using the formula: declination = arctan(He/Hn)
+function calculateDeclination(he: number, hn: number): number {
+  // Avoid division by zero
+  if (hn === 0) return 0;
+  return Math.atan(he / hn);
+}
+
+// Calculate magnetic inclination using the formula: inclination = arctan(√(He² + Hn²) / Hp)
+function calculateInclination(he: number, hn: number, hp: number): number {
+  // Avoid division by zero
+  if (hp === 0) return 0;
+  return Math.atan(Math.sqrt(he * he + hn * hn) / hp);
+}
 
 // Function to directly fetch from NOAA API - Primary source for real-time data
 export async function fetchNOAAMagneticData() {
@@ -27,19 +42,33 @@ export async function fetchNOAAMagneticData() {
     const startIndex = Math.max(0, rawData.length - 30);
     const formattedData = rawData.slice(startIndex).map((entry: any) => {
       const timestamp = entry.time_tag || "";
-      // Consistently use total field as the value across all dashboard components
-      const hpValue = entry.total || entry.hp || entry.bt || 0;
+      
+      // Extract the magnetic field components
+      const he = entry.He || 0;
+      const hn = entry.Hn || 0;
+      const hp = entry.Hp || 0;
+      const totalField = entry.total || 0;
+      
+      // Calculate declination and inclination using our formulas
+      const decr = calculateDeclination(he, hn);
+      const mdig = calculateInclination(he, hn, hp);
       
       return {
         timestamp,
         label: timestamp ? timestamp.substring(11, 16) : "",
-        value: typeof hpValue === 'number' ? hpValue.toFixed(2) : "0.00",
-        decg: 0, dbhg: 0, decr: 0, dbhr: 0,
-        mfig: parseFloat(hpValue) || 0, mfir: 0, mdig: 0, mdir: 0
+        value: typeof totalField === 'number' ? totalField.toFixed(2) : "0.00",
+        decg: 0, // These values are not available from NOAA
+        dbhg: 0, // These values are not available from NOAA
+        decr: decr, // Calculated magnetic declination
+        dbhr: 0, // These values are not available from NOAA
+        mfig: parseFloat(totalField) || 0, // Total magnetic field intensity
+        mfir: 0, // These values are not available from NOAA
+        mdig: mdig, // Calculated magnetic inclination
+        mdir: 0 // These values are not available from NOAA
       };
     });
     
-    console.log("Formatted NOAA Data sample:", formattedData.slice(0, 2));
+    console.log("Formatted NOAA Data sample with calculated values:", formattedData.slice(0, 2));
     return { data: formattedData };
   } catch (error) {
     console.error("Direct NOAA fetch error:", error);
