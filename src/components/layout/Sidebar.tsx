@@ -1,91 +1,82 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Compass, Radar, Earth, Monitor, ArrowDown, Info } from "lucide-react";
+import { 
+  Home, 
+  Compass, 
+  Map as MapIcon, 
+  BarChart3, 
+  Info, 
+  FileBarChart,
+  Menu 
+} from "lucide-react";
+import { useMobileToggle } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 
-type NavItem = {
-  title: string;
-  icon: React.ReactNode;
-  path: string;
-};
-
-const navItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    icon: <Monitor className="w-5 h-5" />,
-    path: "/"
-  },
-  {
-    title: "Magnetic Data",
-    icon: <Compass className="w-5 h-5" />,
-    path: "/magnetic-data"
-  },
-  {
-    title: "Predictions",
-    icon: <Radar className="w-5 h-5" />,
-    path: "/predictions"
-  },
-  {
-    title: "Map View",
-    icon: <Earth className="w-5 h-5" />,
-    path: "/map"
-  },
-  {
-    title: "About",
-    icon: <Info className="w-5 h-5" />,
-    path: "/about"
-  }
-];
-
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const { mobileOpen, setMobileOpen } = useMobileToggle();
+  
+  const isActive = (path: string) => location.pathname === path;
+
+  const links = [
+    { to: "/", icon: <Home className="w-5 h-5" />, text: "Dashboard" },
+    { to: "/magnetic-data", icon: <Compass className="w-5 h-5" />, text: "Magnetic Data" },
+    { to: "/predictions", icon: <BarChart3 className="w-5 h-5" />, text: "Predictions" },
+    { to: "/map", icon: <MapIcon className="w-5 h-5" />, text: "Map" },
+    { to: "/model-report", icon: <FileBarChart className="w-5 h-5" />, text: "Model Report" },
+    { to: "/about", icon: <Info className="w-5 h-5" />, text: "About" },
+  ];
 
   return (
     <div
       className={cn(
-        "bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-300 ease-in-out",
-        collapsed ? "w-16" : "w-64"
+        "z-30 h-screen bg-gray-100 dark:bg-gray-950 border-r border-border w-[250px] transition-all duration-300 ease-in-out fixed md:relative left-0",
+        mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full md:translate-x-0"
       )}
     >
-      <div className="p-4 flex items-center justify-between">
-        <div className={cn("flex items-center", collapsed ? "hidden" : "")}>
-          <Earth className="h-6 w-6 text-sidebar-primary mr-2" />
-          <h1 className="text-sidebar-foreground font-bold text-lg">LEPM</h1>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          <ArrowDown className={cn("h-4 w-4 transition-transform", collapsed ? "rotate-90" : "-rotate-90")} />
-        </Button>
-      </div>
-
-      <div className="flex-1 overflow-auto py-4">
-        <nav className="grid gap-1 px-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.title}
-              to={item.path}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary-foreground transition-colors"
-            >
-              {item.icon}
-              {!collapsed && <span>{item.title}</span>}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
       <div className="p-4">
-        <div className={cn("rounded-md bg-sidebar-accent p-3", collapsed ? "items-center justify-center" : "")}>
-          <div className="flex items-center space-x-3">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse-slow"></div>
-            {!collapsed && <span className="text-xs text-sidebar-foreground">System Active</span>}
+        <div className="flex items-center space-x-2">
+          <BarChart3 className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-lg font-bold">Earthquake</h1>
+            <p className="text-xs text-muted-foreground">Prediction System</p>
+          </div>
+          <div className="flex md:hidden ml-auto">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setMobileOpen(false)}
+            >
+              <Menu className="h-4 w-4" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
           </div>
         </div>
+      </div>
+      
+      <nav className="space-y-1 p-2">
+        {links.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center space-x-3 px-3 py-2 rounded-md transition-colors",
+              isActive(link.to)
+                ? "bg-primary/10 text-primary dark:bg-primary/20"
+                : "hover:bg-muted"
+            )}
+          >
+            {link.icon}
+            <span>{link.text}</span>
+          </Link>
+        ))}
+      </nav>
+      
+      <div className="absolute bottom-4 w-full px-4 text-center text-xs text-muted-foreground">
+        <p>Magnetic Field Analysis</p>
+        <p className="mt-1">© 2024 C.R. Kunferman</p>
       </div>
     </div>
   );

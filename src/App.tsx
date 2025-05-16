@@ -12,6 +12,7 @@ import MagneticData from "./pages/MagneticData";
 import Predictions from "./pages/Predictions";
 import Map from "./pages/Map";
 import About from "./pages/About";
+import ModelReport from "./pages/ModelReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <Sonner />
 
       <BrowserRouter>
         <Routes>
@@ -46,6 +48,11 @@ const App = () => (
           <Route path="/about" element={
             <Layout>
               <About />
+            </Layout>
+          } />
+          <Route path="/model-report" element={
+            <Layout>
+              <ModelReport />
             </Layout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
