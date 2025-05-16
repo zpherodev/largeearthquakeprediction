@@ -1,3 +1,4 @@
+
 import { PredictionTable } from "@/components/predictions/PredictionTable";
 import { HistoricalDataTable } from "@/components/predictions/HistoricalDataTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,24 +115,37 @@ const Predictions = () => {
     { feature: "Temporal Patterns", importance: 0.81, trend: "up" }
   ];
 
-  // Cast the historical data to the correct type with magnetic thresholds
+  // Cast the historical data to the correct type with realistic magnetic thresholds
+  // FIX: Ensure all earthquake magnitudes are properly validated within realistic range (0-10)
   const typedHistoricalData = historicalData ? historicalData.map((item, index) => {
-    const baseValue = typeof item.mag === 'number' ? item.mag : 6.0;
-    const depthFactor = typeof item.depth === 'number' ? item.depth / 100 : 0.1;
+    // Ensure magnitude is within realistic range (0-10)
+    const magnitude = typeof item.mag === 'number' 
+      ? Math.min(Math.max(item.mag, 0), 10)  // Clamp between 0 and 10
+      : 6.0;  // Default to 6.0 if mag is not a number
+      
+    const depth = typeof item.depth === 'number' 
+      ? Math.max(item.depth, 0)  // Ensure depth is not negative
+      : 10;  // Default depth
+    
+    // Calculate derived values based on realistic magnitude ranges
+    const depthFactor = depth / 100;
+    const magneticAnomaly = Math.round((magnitude * 2.5 + depthFactor * 5) * 10) / 10;
+    const resonancePattern = Math.round((magnitude * 1.8 + depthFactor * 3) * 10) / 10;
+    const signalIntensity = Math.round((magnitude * 3.2 + depthFactor * 4) * 10) / 10;
     
     return {
       id: item.id || `eq-${index}`,
       time: item.time || "",
       latitude: typeof item.latitude === 'number' ? item.latitude : 0,
       longitude: typeof item.longitude === 'number' ? item.longitude : 0,
-      depth: typeof item.depth === 'number' ? item.depth : 0,
-      mag: typeof item.mag === 'number' ? item.mag : 0,
+      depth: depth,
+      mag: magnitude,
       magType: item.magType || "",
       place: item.place || "",
       status: item.status || "",
-      magneticAnomaly: Math.round((baseValue * 2.5 + depthFactor * 5) * 10) / 10,
-      resonancePattern: Math.round((baseValue * 1.8 + depthFactor * 3) * 10) / 10,
-      signalIntensity: Math.round((baseValue * 3.2 + depthFactor * 4) * 10) / 10
+      magneticAnomaly: magneticAnomaly,
+      resonancePattern: resonancePattern,
+      signalIntensity: signalIntensity
     };
   }) : [];
 
