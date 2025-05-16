@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getPredictions, triggerPrediction, getModelStatus, fetchHistoricalData } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Info, BarChart, ArrowUpDown, LineChart, FileBarChart, Activity, Database, Gauge, Zap, Clock, RotateCw } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusCard } from "@/components/dashboard/StatusCard";
@@ -63,15 +63,29 @@ const Predictions = () => {
     try {
       setIsRefreshing(true);
       const result = await triggerPrediction();
-      if (result.success) {
-        toast.success("New prediction generated");
-        refetch();
+      
+      if (result && result.success) {
+        toast({
+          title: "Prediction Generated",
+          description: `Successfully generated ${result.predictionCount || 0} new predictions.`,
+          variant: "default",
+        });
+        await refetch();
       } else {
-        toast.error("Failed to generate prediction");
+        toast({
+          title: "Prediction Failed",
+          description: "The system couldn't generate new predictions. This could be because the backend is running in simulation mode.",
+          variant: "destructive",
+        });
+        console.log("Prediction result:", result);
       }
     } catch (error) {
-      toast.error("Error triggering prediction");
       console.error("Error triggering prediction:", error);
+      toast({
+        title: "Error",
+        description: "Could not connect to the prediction service. Check your connection or try again later.",
+        variant: "destructive",
+      });
     } finally {
       setIsRefreshing(false);
     }
