@@ -1,8 +1,12 @@
+
 import { toast } from "sonner";
 
 // External API endpoints - real data sources
 const NOAA_MAGNETOMETER_ENDPOINT = "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json";
 const GITHUB_DATA_ENDPOINT = "https://raw.githubusercontent.com/crknftart/Large-Earthquake-Prediction-Model/refs/heads/main/combined_earthquake_m6_and_above_full_data.csv";
+
+// Base URL for API calls - use environment variable or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 // Calculate magnetic declination using the formula: declination = arctan(He/Hn)
 function calculateDeclination(he: number, hn: number): number {
@@ -93,11 +97,39 @@ const FALLBACK = {
 };
 
 export async function getMagneticData() {
-  // Always use NOAA data directly - no localhost fallback
-  return fetchNOAAMagneticData();
+  try {
+    // First try to fetch from local API server
+    const response = await fetch(`${API_BASE_URL}/magnetic-data`, { 
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (response.ok) {
+      return await response.json();
+    }
+    
+    console.log("Local API not available, using NOAA data directly");
+    // Fallback to direct NOAA data
+    return fetchNOAAMagneticData();
+  } catch (error) {
+    console.error("Error fetching magnetic data:", error);
+    return fetchNOAAMagneticData();
+  }
 }
 
 export async function getModelStatus() {
+  try {
+    // First try to fetch from local API server
+    const response = await fetch(`${API_BASE_URL}/model-status`, { 
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Error fetching model status from backend:", error);
+  }
+
   console.log("Using model status fallback data");
   // Return consistent fallback data with additional properties for the Predictions page
   const fallbackData = {
@@ -122,6 +154,19 @@ export async function getModelStatus() {
 }
 
 export async function getRiskAssessment() {
+  try {
+    // First try to fetch from local API server
+    const response = await fetch(`${API_BASE_URL}/risk-assessment`, { 
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Error fetching risk assessment from backend:", error);
+  }
+
   console.log("Using risk assessment fallback data");
   // Generate consistent fallback data for risk assessment
   return {
@@ -133,6 +178,19 @@ export async function getRiskAssessment() {
 }
 
 export async function getPredictions() {
+  try {
+    // First try to fetch from local API server
+    const response = await fetch(`${API_BASE_URL}/predictions`, { 
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Error fetching predictions from backend:", error);
+  }
+
   console.log("Using predictions fallback data");
   return { predictions: [] };
 }
@@ -140,27 +198,32 @@ export async function getPredictions() {
 // Updated to include predictionCount in the return type
 export async function triggerPrediction(): Promise<{ success: boolean; message?: string; predictionCount?: number }> {
   try {
-    console.log("Trying to trigger prediction with local model");
+    console.log("Triggering prediction with local Flask API at:", API_BASE_URL);
     
-    // Check if we're running with a backend
-    const response = await fetch('/api/trigger-prediction', {
+    // Make a request to the Flask backend
+    const response = await fetch(`${API_BASE_URL}/trigger-prediction`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
+    
+    // Log the response status to help with debugging
+    console.log("Prediction API response status:", response.status);
     
     if (!response.ok) {
       throw new Error(`Failed to trigger prediction: ${response.status}`);
     }
     
     const result = await response.json();
+    console.log("Prediction result:", result);
     return result;
   } catch (error) {
     console.error("Error triggering prediction:", error);
     return { 
       success: false, 
-      message: "Backend functionality not available",
+      message: error instanceof Error ? error.message : "Backend functionality not available",
       predictionCount: 0
     };
   }
