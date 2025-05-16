@@ -192,7 +192,7 @@ const Predictions = () => {
       <Alert variant="default" className="bg-blue-50 border-blue-200">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
-          This model analyzes real-time magnetic field readings to detect potential earthquake precursors. For high-magnitude events (M6.0+), our model identifies specific magnetic threshold patterns that appear before major seismic events.
+          <h1></h1>This model analyzes **simulated** magnetic field readings to detect potential earthquake precursors. For high-magnitude events (M6.0+), our model identifies specific magnetic threshold patterns that appear before major seismic events.</h1>
         </AlertDescription>
       </Alert>
 
