@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // External API endpoints - real data sources
@@ -245,6 +244,9 @@ export async function triggerPrediction(): Promise<{ success: boolean; message?:
   try {
     console.log("Triggering prediction with local Flask API at:", API_BASE_URL);
     
+    // Show a toast to indicate we're starting the prediction process
+    toast.loading("Requesting prediction from backend server...");
+    
     // Add timeout to prevent long waits if backend is unreachable
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for predictions
@@ -280,17 +282,18 @@ export async function triggerPrediction(): Promise<{ success: boolean; message?:
     
     // Show different error messages based on the type of error
     if (error.name === 'AbortError') {
-      toast.error("Prediction request timed out. Is the backend running?");
+      toast.error("Prediction request timed out. Ensure the Flask backend is running at " + API_BASE_URL);
       return { 
         success: false, 
-        message: "Connection to backend timed out",
+        message: "Connection to backend timed out. Please make sure the Flask backend is running.",
         predictionCount: 0
       };
     }
     
+    toast.error(`Failed to trigger prediction: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return { 
       success: false, 
-      message: error instanceof Error ? error.message : "Backend functionality not available",
+      message: error instanceof Error ? error.message : "Backend functionality not available. Please ensure Flask server is running.",
       predictionCount: 0
     };
   }

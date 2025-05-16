@@ -1,4 +1,3 @@
-
 # Python backend for Earthquake Prediction Model
 # To run this server:
 # 1. Install requirements: pip install flask flask-cors pandas scikit-learn
@@ -14,6 +13,9 @@ from datetime import datetime, timedelta
 import os
 import logging
 import time
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -119,17 +121,14 @@ def fetch_emag_data():
 
         # NOAA endpoints to try
         endpoints = [
-            "https://services.swpc.noaa.gov/products/goes/primary/magnetometer-1-minute.json",
+            "https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json",
             "https://services.swpc.noaa.gov/json/goes/primary/mag-1-day.json"
         ]
 
         raw_data = None
         for url in endpoints:
             try:
-                import requests
                 session = requests.Session()
-                from requests.adapters import HTTPAdapter
-                from urllib3.util.retry import Retry
                 retries = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504, 404])
                 session.mount('https://', HTTPAdapter(max_retries=retries))
                 response = session.get(url, timeout=10)
@@ -158,25 +157,61 @@ def fetch_emag_data():
         if raw_data is None:
             raise Exception("All NOAA endpoints failed")
 
+        # Process the data format correctly based on NOAA magnetometer API
         data = []
         for entry in raw_data[-30:]:  # Last 30 entries
             try:
+                # Extract the core fields we need
                 timestamp = entry.get("time_tag")
                 if not timestamp:
                     logger.warning("Missing time_tag in entry")
                     continue
-                hp = float(entry.get("hp", 0))  # Total magnetic field strength
-                decg = dbhg = decr = dbhr = mdig = mdir = 0
-                mfig = hp
-                mfir = np.radians(mfig)
-                label = timestamp[11:16]
+                
+                # Extract the magnetic field components correctly
+                he = float(entry.get("He", 0))  # East component
+                hn = float(entry.get("Hn", 0))  # North component
+                hp = float(entry.get("Hp", 0))  # Parallel component
+                total = float(entry.get("total", 0))  # Total field
+                
+                # Calculate derived values
+                decg = 0  # Default values for fields not available
+                dbhg = 0
+                
+                # Calculate declination: arctan(He/Hn)
+                if hn != 0:
+                    decr = np.arctan(he / hn)
+                else:
+                    decr = 0
+                    
+                dbhr = 0
+                
+                # Use total field for mfig if available, otherwise calculate from components
+                mfig = total if total > 0 else np.sqrt(he**2 + hn**2 + hp**2)
+                
+                # Calculate magnetic inclination: arctan(√(He² + Hn²) / Hp)
+                if hp != 0:
+                    mdig = np.arctan(np.sqrt(he**2 + hn**2) / hp)
+                else:
+                    mdig = 0
+                    
+                mfir = mfig  # Store as radians equivalent
+                mdir = 0
+                
+                # Extract time for label
+                label = timestamp[11:16] if len(timestamp) >= 16 else timestamp
 
                 data.append({
                     "timestamp": timestamp,
                     "label": label,
-                    "value": f"{hp:.2f}",
-                    "decg": decg, "dbhg": dbhg, "decr": decr, "dbhr": dbhr,
-                    "mfig": mfig, "mfir": mfir, "mdig": mdig, "mdir": mdir
+                    "value": f"{mfig:.2f}",
+                    "decg": decg, 
+                    "dbhg": dbhg, 
+                    "decr": decr, 
+                    "dbhr": dbhr,
+                    "mfig": mfig, 
+                    "mfir": mfir, 
+                    "mdig": mdig, 
+                    "mdir": mdir
                 })
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed entry: {e}")
@@ -189,7 +224,7 @@ def fetch_emag_data():
         last_data_fetch = datetime.now()
         model_status["modelStatus"] = "idle"
         model_status["lastUpdate"] = datetime.now().isoformat()
-        logger.info("Fetched and parsed magnetic data successfully")
+        logger.info(f"Fetched and parsed magnetic data successfully: {len(data)} entries")
         
         # Save to cache
         save_cached_data(data)
